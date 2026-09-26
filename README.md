@@ -29,3 +29,10 @@ Agents are registered through a central registry so new agents can be added with
 
 ## Important
 The current mobile build is a UI/architecture foundation. Live blockchain results require configured data providers and API credentials. The app must distinguish confirmed DEX swaps from CEX transfers and unknown flows and must never treat transfer activity alone as proof of buying.
+
+
+## Android build
+The repository includes a GitHub Actions workflow at .github/workflows/eas-build.yml for an APK build. It requires an Expo EAS token stored as the GitHub Actions secret EXPO_TOKEN; secrets are never committed to source control.
+
+## Live data
+Alchemy Transfers API supports historical ERC-20 transfers across Ethereum and supported L2s. The provider uses pagination so large transfer histories are not silently truncated. Live whale-holder discovery still requires a holder/indexing provider; transfer-only data is never presented as proof of a fresh buy.
