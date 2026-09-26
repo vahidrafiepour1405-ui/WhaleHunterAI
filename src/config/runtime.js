@@ -1,0 +1,1 @@
+export const RUNTIME={scanIntervals:{fast:15*60*1000,standard:60*60*1000,daily:24*60*60*1000},limits:{marketTokens:100,holdersPerToken:100,transfersPerToken:500},features:{independentWhales:true,confirmedDexBuys:true,cexFlow:true,networkAnalysis:true}};
