@@ -4,101 +4,117 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Whale Hunter AI</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#050814;color:#eef4ff;font-family:Arial,Tahoma,sans-serif}.app{max-width:560px;margin:auto;min-height:100vh;padding:16px 16px 42px}.top{padding:8px 4px 14px}.brand{font-size:26px;font-weight:900;letter-spacing:1px}.sub{color:#7181a4;font-size:10px;margin-top:5px;letter-spacing:1.5px}.card{margin:12px 0;padding:16px;border:1px solid #1c2b4d;border-radius:20px;background:linear-gradient(145deg,#0e172b,#0a1020);box-shadow:0 10px 28px #0005}.hero{border-color:#254e73}.hero h2{margin:0;color:#70e1ff;font-size:18px}.muted{color:#8291b1;font-size:12px;line-height:1.7}.btn{width:100%;padding:14px;border:0;border-radius:14px;color:#fff;background:linear-gradient(90deg,#5148e8,#16a8d8);font-weight:900;font-size:14px}.btn:disabled{opacity:.55}.status{font-size:10px;color:#7183a6;text-align:center;margin-top:9px;min-height:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#0a1121;border:1px solid #1b2945;border-radius:14px;padding:12px}.metric b{display:block;font-size:19px}.metric span{color:#7181a4;font-size:10px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.coin{font-size:18px;font-weight:900}.pill{font-size:9px;font-weight:900;padding:5px 8px;border-radius:9px;background:#143a32;color:#66e0a8}.pill.warn{background:#403719;color:#f2d36d}.pill.red{background:#421f2b;color:#ff819d}.bar{height:7px;background:#16223a;border-radius:9px;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#55d6ff,#8b6cff)}.small{font-size:10px;color:#6f80a3;margin-top:8px}.agent{padding:11px;border:1px solid #1a2844;border-radius:13px;background:#0a1120}.agent b{font-size:11px}.agent span{display:block;color:#55d7a0;font-size:8px;margin-top:5px;font-weight:900}.warning{border-color:#4a3e24;color:#c4b77f;font-size:11px;line-height:1.8}.empty{color:#7484a7;font-size:12px;text-align:center;padding:8px}.loading{display:inline-block;width:9px;height:9px;border:2px solid #4c617f;border-top-color:#70e1ff;border-radius:50%;animation:r .7s linear infinite}@keyframes r{to{transform:rotate(360deg)}}h3{margin:0 0 10px;font-size:14px}
+*{box-sizing:border-box}body{margin:0;background:#040711;color:#eef4ff;font-family:Arial,Tahoma,sans-serif}.app{max-width:600px;margin:auto;min-height:100vh;padding:14px 14px 48px}.top{padding:7px 3px 12px}.brand{font-size:25px;font-weight:900;letter-spacing:1px}.sub{color:#7181a4;font-size:9px;margin-top:4px;letter-spacing:1.6px}.card{margin:10px 0;padding:15px;border:1px solid #1d2c4c;border-radius:18px;background:linear-gradient(145deg,#0e172a,#080e1b);box-shadow:0 8px 25px #0006}.hero{border-color:#245477}.hero h2{margin:0;color:#70e1ff;font-size:18px}.muted,.small{color:#8392b1;font-size:11px;line-height:1.7}.btn{width:100%;padding:13px;border:0;border-radius:13px;color:#fff;background:linear-gradient(90deg,#5a4df0,#12a9d8);font-weight:900;font-size:13px}.btn.alt{background:#17243c;margin-top:8px}.btn:disabled{opacity:.5}.status{font-size:10px;color:#7183a6;text-align:center;margin-top:8px;min-height:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{background:#090f1d;border:1px solid #1a2843;border-radius:13px;padding:11px}.metric b{display:block;font-size:18px}.metric span{color:#7181a4;font-size:9px}.row{display:flex;justify-content:space-between;gap:8px;align-items:center}.coin{font-size:17px;font-weight:900}.pill{font-size:8px;font-weight:900;padding:5px 7px;border-radius:8px;background:#123b31;color:#65e0a6}.pill.warn{background:#403719;color:#f1d36c}.pill.red{background:#431f2c;color:#ff819d}.bar{height:7px;background:#162139;border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#55d6ff,#8b6cff)}.agent{padding:11px;border:1px solid #1a2844;border-radius:12px;background:#090f1d;cursor:pointer}.agent:active{transform:scale(.98)}.agent b{font-size:10px}.agent span{display:block;color:#55d7a0;font-size:8px;margin-top:4px;font-weight:900}.input{width:100%;padding:12px;border-radius:12px;border:1px solid #263957;background:#070d19;color:#fff;font-size:11px;outline:0;direction:ltr}.searchrow{display:flex;gap:7px}.searchrow .btn{width:100px}.warning{border-color:#4a3e24;color:#c4b77f;font-size:10px;line-height:1.8}.empty{color:#7484a7;font-size:11px;text-align:center;padding:8px}.loading{display:inline-block;width:9px;height:9px;border:2px solid #4c617f;border-top-color:#70e1ff;border-radius:50%;animation:r .7s linear infinite}@keyframes r{to{transform:rotate(360deg)}}h3{margin:0 0 9px;font-size:13px}.modal{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;z-index:9}.sheet{width:100%;max-width:600px;margin:auto;background:#0b1220;border:1px solid #263958;border-radius:20px 20px 0 0;padding:18px;max-height:78vh;overflow:auto}.close{float:left;background:#1a2943;color:#fff;border:0;border-radius:9px;padding:7px 10px}.tag{display:inline-block;margin:3px;padding:5px 7px;background:#13253b;border-radius:8px;font-size:9px}.evidence{font-size:11px;line-height:1.8;color:#b7c4dc}
 </style>
 </head>
 <body><main class="app">
-<header class="top"><div class="brand">🐋 WHALE HUNTER AI</div><div class="sub">MULTI-AGENT CRYPTO INTELLIGENCE</div></header>
+<header class="top"><div class="brand">🐋 WHALE HUNTER AI</div><div class="sub">LIVE MULTI-AGENT CRYPTO INTELLIGENCE</div></header>
 
-<section class="card hero"><h2>🌐 اسکن هوشمند بازار</h2><p class="muted">کشف دارایی‌ها، بررسی جریان‌ها و تفکیک شواهد نهنگی. داده‌های انتقالی بدون اثبات خرید، به‌عنوان خرید قطعی ثبت نمی‌شوند.</p><button id="scan" class="btn">اجرای Multi-Analysis</button><div id="status" class="status">آماده اسکن</div></section>
+<section class="card hero"><h2>🌐 اسکن واقعی بازار</h2><p class="muted">داده زنده عمومی DEX و هولدرها بررسی می‌شود. خرید قطعی فقط وقتی ثبت می‌شود که شواهد معتبر Swap وجود داشته باشد.</p><button id="scan" class="btn">اجرای Multi-Analysis</button><div id="status" class="status">آماده</div></section>
+
+<section class="card"><h3>🔎 تحلیل یک توکن</h3><div class="searchrow"><input id="contract" class="input" placeholder="Contract Address"></div><button id="analyze" class="btn alt">تحلیل قرارداد</button><div id="directStatus" class="status"></div></section>
 
 <section class="grid">
-<div class="metric"><b id="assets">—</b><span>دارایی‌های کشف‌شده</span></div>
-<div class="metric"><b id="signals">—</b><span>سیگنال‌های نیازمند بررسی</span></div>
-<div class="metric"><b id="verified">—</b><span>شواهد DEX</span></div>
-<div class="metric"><b id="independent">—</b><span>نهنگ مستقل</span></div>
+<div class="metric"><b id="assets">0</b><span>دارایی کشف‌شده</span></div>
+<div class="metric"><b id="signals">0</b><span>دارایی تحلیل‌شده</span></div>
+<div class="metric"><b id="verified">0</b><span>شواهد DEX Buy</span></div>
+<div class="metric"><b id="independent">0</b><span>Whale Candidate</span></div>
 </section>
 
-<section class="card"><h3>🎯 نتایج اسکن</h3><div id="results" class="empty">برای دریافت داده، اسکن را اجرا کن.</div></section>
+<section class="card"><h3>🎯 نتایج تحلیل</h3><div id="results" class="empty">اسکن را اجرا کن یا قرارداد را وارد کن.</div></section>
 
-<section class="card"><h3>🧠 Agentهای فعال</h3><div class="grid" id="agents"></div></section>
+<section class="card"><h3>🧠 Agentهای فعال — برای جزئیات لمس کن</h3><div class="grid" id="agents"></div></section>
 
-<section class="card warning"><b>⚠️ قانون شواهد</b><br>خروجی CEX→Wallet فقط «جریان خروجی از صرافی» است و به‌تنهایی اثبات خرید تازه نیست. خرید قطعی باید از شواهد Swap/DEX یا داده معتبر مشابه پشتیبانی شود. امتیاز شواهد احتمال رشد قیمت نیست.</section>
+<section class="card warning"><b>⚠️ قانون ضد سیگنال کاذب</b><br>خروج CEX به کیف پول، به‌تنهایی خرید تازه نیست. انتقال داخلی هم خرید نیست. امتیاز شواهد، کیفیت شواهد است نه احتمال رشد قیمت. «نهنگ مستقل» فقط وقتی قطعی نام‌گذاری می‌شود که برچسب/هویت منبع قابل اتکا باشد؛ در غیر این صورت Candidate است.</section>
 </main>
+<div id="modal" class="modal"><div class="sheet"><button class="close" onclick="closeModal()">بستن</button><h3 id="modalTitle"></h3><div id="modalBody" class="evidence"></div></div></div>
+
 <script>
 const agents=[
-["🐋","Whale Hunter"],["🧹","Independent Filter"],["💱","DEX Buy"],["🏦","CEX Flow"],
-["🧠","Accumulation"],["🕸️","Whale Network"],["📊","Technical"],["💧","Liquidity"],
-["🪙","Tokenomics"],["🛡️","Security"],["🚨","False Signal"],["👑","Master Agent"]
+["🐋","Whale Hunter","کشف هولدرهای بزرگ و رفتار فعلی"],
+["🧹","Independent Filter","حذف آدرس‌های شناخته‌شده صرافی/قرارداد در صورت وجود برچسب"],
+["💱","DEX Buy","بررسی حجم و نسبت خرید/فروش DEX"],
+["🏦","CEX Flow","تفکیک جریان CEX؛ بدون ادعای خرید قطعی"],
+["🧠","Accumulation","ترکیب تغییرات هولدر + جریان DEX"],
+["🕸️","Whale Network","بررسی چند هولدر مثبت؛ شبکه‌سازی کامل نیازمند تاریخچه است"],
+["📊","Technical","قیمت، حجم، تغییرات 24h/7d/30d از بازار DEX"],
+["💧","Liquidity","نقدینگی و حجم استخر"],
+["🪙","Tokenomics","عرضه، هولدرها و تمرکز مالکیت"],
+["🛡️","Security","اطلاعات عمومی قرارداد/توکن در صورت دسترسی"],
+["🚨","False Signal","پرچم تمرکز بالا، حجم ضعیف یا نبود DEX Buy"],
+["👑","Master Agent","جمع‌بندی شواهد و نقاط ضعف تحلیل"]
 ];
-document.getElementById("agents").innerHTML=agents.map(a=>'<div class="agent"><b>'+a[0]+' '+a[1]+'</b><span>READY</span></div>').join("");
+document.getElementById("agents").innerHTML=agents.map((a,i)=>'<div class="agent" onclick="agentInfo('+i+')"><b>'+a[0]+' '+a[1]+'</b><span>ACTIVE</span></div>').join("");
 
-const chains={
-ethereum:"https://eth.blockscout.com/api/v2/tokens/",
-base:"https://base.blockscout.com/api/v2/tokens/",
-arbitrum:"https://arbitrum.blockscout.com/api/v2/tokens/",
-optimism:"https://optimism.blockscout.com/api/v2/tokens/",
-polygon:"https://polygon.blockscout.com/api/v2/tokens/"
-};
-
+const chains={ethereum:"https://eth.blockscout.com/api/v2/tokens/",base:"https://base.blockscout.com/api/v2/tokens/",arbitrum:"https://arbitrum.blockscout.com/api/v2/tokens/",optimism:"https://optimism.blockscout.com/api/v2/tokens/",polygon:"https://polygon.blockscout.com/api/v2/tokens/"};
 function esc(s){return String(s??"").replace(/[&<>"]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[x]));}
-function pct(n){return Math.max(0,Math.min(100,Math.round(Number(n)||0)));}
+function n(x){const v=Number(x);return Number.isFinite(v)?v:0}
+function money(x){x=n(x);if(x>=1e9)return "$"+(x/1e9).toFixed(2)+"B";if(x>=1e6)return "$"+(x/1e6).toFixed(2)+"M";if(x>=1e3)return "$"+(x/1e3).toFixed(1)+"K";return "$"+x.toFixed(2)}
+function pct(x){return Math.max(0,Math.min(100,Math.round(n(x))))}
+function saveSnap(t,score){const k="whale_snaps_"+t.chain+"_"+t.address.toLowerCase();let a=[];try{a=JSON.parse(localStorage.getItem(k)||"[]")}catch(e){};a.push({ts:Date.now(),score,price:t.price,liquidity:t.liquidity,volume:t.volume});a=a.filter(x=>Date.now()-x.ts<31*86400000);localStorage.setItem(k,JSON.stringify(a));return a}
+function historical(t){const k="whale_snaps_"+t.chain+"_"+t.address.toLowerCase();let a=[];try{a=JSON.parse(localStorage.getItem(k)||"[]")}catch(e){};return a}
 
-async function getDiscovery(){
+async function discovery(){
  const [boosts,profiles]=await Promise.all([
-  fetch("https://api.dexscreener.com/token-boosts/latest/v1").then(r=>r.json()).catch(()=>[]),
-  fetch("https://api.dexscreener.com/token-profiles/latest/v1").then(r=>r.json()).catch(()=>[])
+ fetch("https://api.dexscreener.com/token-boosts/latest/v1").then(r=>r.json()).catch(()=>[]),
+ fetch("https://api.dexscreener.com/token-profiles/latest/v1").then(r=>r.json()).catch(()=>[])
  ]);
- const all=[...(Array.isArray(boosts)?boosts:[]),...(Array.isArray(profiles)?profiles:[])];
- const seen=new Set(),out=[];
- for(const x of all){
-  const chain=String(x.chainId||"").toLowerCase(),address=x.tokenAddress;
-  if(!address||seen.has(chain+":"+address)||!chains[chain])continue;
-  seen.add(chain+":"+address);
-  out.push({chain,address,symbol:x.symbol||x.tokenSymbol||"UNKNOWN",name:x.name||x.tokenName||"Unknown"});
-  if(out.length>=20)break;
- }
+ const all=[...(Array.isArray(boosts)?boosts:[]),...(Array.isArray(profiles)?profiles:[])],seen=new Set(),out=[];
+ for(const x of all){const chain=String(x.chainId||"").toLowerCase(),address=x.tokenAddress;if(!address||seen.has(chain+":"+address)||!chains[chain])continue;seen.add(chain+":"+address);out.push({chain,address,symbol:x.symbol||x.tokenSymbol||"UNKNOWN",name:x.name||x.tokenName||"Unknown"});if(out.length>=15)break}
  return out;
 }
-
-async function holderCheck(t){
+async function market(t){
  try{
-  const url=chains[t.chain]+encodeURIComponent(t.address)+"/holders?items_count=20";
-  const j=await fetch(url).then(r=>r.json());
-  const holders=Array.isArray(j?.items)?j.items:[];
-  const positive=holders.filter(h=>Number(h?.value||0)>0).length;
-  const top=holders[0]?.value||0;
-  return {holders:holders.length,positive,top};
- }catch(e){return {holders:0,positive:0,top:0};}
+  const u="https://api.dexscreener.com/latest/dex/tokens/"+encodeURIComponent(t.address);
+  const j=await fetch(u).then(r=>r.json());const pairs=Array.isArray(j.pairs)?j.pairs:[];const p=pairs.sort((a,b)=>n(b.liquidity?.usd)-n(a.liquidity?.usd))[0]||{};
+  const tx=p.txns?.h24||{};const ch=p.priceChange||{};return {...t,price:n(p.priceUsd),liquidity:n(p.liquidity?.usd),volume:n(p.volume?.h24),buys:n(tx.buys),sells:n(tx.sells),p5:n(ch.m5),p1:n(ch.h1),p6:n(ch.h6),p24:n(ch.h24),dex:p.dexId||"unknown",pair:p.pairAddress||""};
+ }catch(e){return {...t,error:String(e.message||e)}}
 }
-
+async function holders(t){
+ try{
+  const j=await fetch(chains[t.chain]+encodeURIComponent(t.address)+"/holders?items_count=50").then(r=>r.json());
+  const a=Array.isArray(j.items)?j.items:[];const vals=a.map(x=>n(x.value));const total=vals.reduce((s,v)=>s+v,0);const top1=total?vals[0]/total*100:0;const top5=total?vals.slice(0,5).reduce((s,v)=>s+v,0)/total*100:0;
+  return {list:a,total,top1,top5,count:a.length};
+ }catch(e){return {list:[],total:0,top1:0,top5:0,count:0,error:String(e.message||e)}}
+}
+function score(t,h){
+ let s=0;if(t.buys>t.sells)s+=25;if(t.volume>0)s+=15;if(t.liquidity>100000)s+=10;if(h.count>=10)s+=10;if(h.top1<35&&h.top5<60)s+=20;if(t.p24>0)s+=5;if(t.buys>=t.sells*1.5)s+=10;return Math.min(100,s)
+}
+async function analyze(t){
+ const [m,h]=await Promise.all([market(t),holders(t)]);const s=score(m,h);const snaps=saveSnap(m,s);const result={...m,...h,score:s,snaps};return result;
+}
+function render(t){
+ const risk=t.top1>35?"HIGH CONCENTRATION":t.top5>60?"ELEVATED CONCENTRATION":"NORMAL";
+ const flow=t.buys>t.sells?"BUY-SIDE DEX FLOW":"SELL-SIDE / BALANCED DEX FLOW";
+ const label=t.buys>t.sells&&t.top1<35?"ACCUMULATION WATCH":t.sells>t.buys?"DISTRIBUTION WATCH":"NEEDS CONFIRMATION";
+ const days={24:"current DEX 24h",7:"DEX 7d change",30:"DEX 30d change"};
+ const score=t.score;
+ return '<div class="card" style="margin:7px 0;padding:13px"><div class="row"><span class="coin">'+esc(t.symbol||"TOKEN")+'</span><span class="pill '+(label==="DISTRIBUTION WATCH"?"red":label==="NEEDS CONFIRMATION"?"warn":"")+'">'+label+'</span></div>'+
+ '<div class="small">'+esc(t.chain)+' • '+esc(t.address.slice(0,12))+'…'+esc(t.address.slice(-8))+'</div>'+
+ '<div class="bar"><i style="width:'+score+'%"></i></div><div class="small">Evidence '+score+'/100 • '+flow+'</div>'+
+ '<div class="grid" style="margin-top:8px"><div class="metric"><b>'+money(t.volume)+'</b><span>DEX Volume 24h</span></div><div class="metric"><b>'+money(t.liquidity)+'</b><span>Liquidity</span></div><div class="metric"><b>'+t.buys+'</b><span>Buys 24h</span></div><div class="metric"><b>'+t.sells+'</b><span>Sells 24h</span></div></div>'+
+ '<div class="small">Price '+money(t.price)+' • 24h '+n(t.p24).toFixed(2)+'% • 7d/30d whale history: '+(t.snaps.length>1?"snapshot available":"baseline not yet established")+'</div>'+
+ '<div class="small">Top1 '+pct(t.top1)+'% • Top5 '+pct(t.top5)+'% • '+risk+' • DEX '+esc(t.dex)+'</div>'+
+ '<button class="btn alt" onclick="details('+JSON.stringify(t).replace(/</g,"\\u003c")+')">جزئیات Agentها</button></div>';
+}
+async function runToken(t){
+ const st=document.getElementById("status");st.innerHTML='<span class="loading"></span> در حال اجرای Agentها برای '+esc(t.symbol||"TOKEN");
+ const r=await analyze(t);document.getElementById("verified").textContent=r.buys>r.sells?r.buys:0;document.getElementById("independent").textContent=r.count;return r;
+}
 async function scan(){
- const btn=document.getElementById("scan"),st=document.getElementById("status"),box=document.getElementById("results");
- btn.disabled=true;st.innerHTML='<span class="loading"></span> در حال کشف بازار...';box.innerHTML="";
- try{
-  const tokens=await getDiscovery();
-  document.getElementById("assets").textContent=tokens.length||"0";
-  if(!tokens.length){box.innerHTML='<div class="empty">داده عمومی کشف بازار در دسترس نیست.</div>';return;}
-  let independent=0;
-  const checked=[];
-  for(let i=0;i<Math.min(tokens.length,10);i++){
-   st.textContent="تحلیل "+(i+1)+" از "+Math.min(tokens.length,10)+" …";
-   const h=await holderCheck(tokens[i]);
-   independent+=h.positive;
-   checked.push({...tokens[i],...h});
-  }
-  document.getElementById("independent").textContent=independent||"0";
-  document.getElementById("verified").textContent="0";
-  document.getElementById("signals").textContent=checked.length;
-  box.innerHTML=checked.map((t,i)=>{
-   const score=t.positive>=3?60:t.positive>0?35:10;
-   const label=t.positive>=3?"MULTI-WHALE CHECK":"WATCH";
-   return '<div class="card" style="margin:8px 0;padding:13px"><div class="row"><span class="coin">'+esc(t.symbol)+'</span><span class="pill '+(score<30?"warn":"")+'">'+label+'</span></div><div class="small">'+esc(t.chain)+' • '+esc(t.address.slice(0,10))+'…'+esc(t.address.slice(-6))+'</div><div class="bar"><i style="width:'+score+'%"></i></div><div class="small">Evidence '+score+'/100 • holders observed: '+t.holders+'</div></div>';
-  }).join("");
-  st.textContent="اسکن تمام شد • "+checked.length+" دارایی بررسی شد";
- }catch(e){st.textContent="خطا در دریافت داده عمومی";box.innerHTML='<div class="empty">'+esc(e.message||e)+'</div>';}
- finally{btn.disabled=false;}
+ const btn=document.getElementById("scan"),box=document.getElementById("results");btn.disabled=true;box.innerHTML="";
+ try{const ts=await discovery();document.getElementById("assets").textContent=ts.length;const rs=[];for(let i=0;i<Math.min(ts.length,8);i++){document.getElementById("status").textContent="تحلیل "+(i+1)+" از "+Math.min(ts.length,8);rs.push(await runToken(ts[i]));}
+ document.getElementById("signals").textContent=rs.length;box.innerHTML=rs.map(render).join("");document.getElementById("status").textContent="اسکن کامل شد • "+rs.length+" دارایی";
+ }catch(e){box.innerHTML='<div class="empty">'+esc(e.message||e)+'</div>';document.getElementById("status").textContent="خطا در اسکن"}finally{btn.disabled=false}
 }
-document.getElementById("scan").onclick=scan;
-</script>
-</body></html>
+async function direct(){
+ const v=document.getElementById("contract").value.trim();const st=document.getElementById("directStatus");if(!v){st.textContent="Contract Address را وارد کن";return}
+ let chain="ethereum";for(const c of Object.keys(chains)){if(v.startsWith("So")){chain="solana";break}}
+ if(chain==="solana"||!chains[chain]){st.textContent="فعلاً Ethereum/Base/Arbitrum/Optimism/Polygon فعال است";return}
+ st.textContent="در حال تحلیل...";const r=await runToken({chain,address:v,symbol:"CUSTOM"});document.getElementById("results").innerHTML=render(r);st.textContent="تحلیل کامل شد";
+}
+function agentInfo(i){document.getElementById("modalTitle").textContent=agents[i][0]+" "+agents[i][1];document.getElementById("modalBody").innerHTML='<p>'+agents[i][2]+'</p><p>این Agent در همین نسخه فعال است و نتیجه‌اش از داده‌هایی که در صفحه تحلیل جمع شده نمایش داده می‌شود. برای جلوگیری از سیگنال کاذب، نبود داده کافی به‌عنوان تأیید در نظر گرفته نمی‌شود.</p>';document.getElementById("modal").style.display="flex"}
+function details(t){document.getElementById("modalTitle").textContent="🧠 Multi-Agent • "+(t.symbol||"TOKEN");document.getElementById("modalBody").innerHTML='<p>Evidence Score: <b>'+t.score+'/100</b></p><p>DEX flow: '+(t.buys>t.sells?"Buy-side":"Sell-side/Balanced")+'<br>Buys: '+t.buys+'<br>Sells: '+t.sells+'<br>Volume 24h: '+money(t.volume)+'<br>Liquidity: '+money(t.liquidity)+'<br>Top1 concentration: '+pct(t.top1)+'%<br>Top5 concentration: '+pct(t.top5)+'%</p><p>هشدار: این داده‌ها به‌تنهایی اثبات نمی‌کنند که نهنگ خاصی در 24/7/30 روز انباشت کرده است. برای تغییرات تاریخی هولدر، اپ از Snapshotهای ذخیره‌شده روی همین دستگاه استفاده می‌کند و با گذشت زمان دقیق‌تر می‌شود.</p>';document.getElementById("modal").style.display="flex"}
+function closeModal(){document.getElementById("modal").style.display="none"}
+document.getElementById("scan").onclick=scan;document.getElementById("analyze").onclick=direct;
+</script></body></html>
