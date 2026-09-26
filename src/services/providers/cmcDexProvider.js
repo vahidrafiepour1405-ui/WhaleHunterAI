@@ -29,8 +29,8 @@ export function createCmcDexProvider({network="ethereum"}={}){
    return arr(data,["holders"]).map(h=>({address:h.walletAddress,balance:Number(h.balance||h.actualBalance||0),usdValue:Number(h.spotPosition||0),netChangeUsd:Number(h.buyUsd||0)-Number(h.sellUsd||0),netBuyAmount:Number(h.netBuyAmount||0),buyUsd:Number(h.buyUsd||0),sellUsd:Number(h.sellUsd||0),buyCount:Number(h.buyCount||0),sellCount:Number(h.sellCount||0),avgBuyPriceUsd:Number(h.avgBuyPriceUsd||0),tags:Array.isArray(h.tags)?h.tags:[],name:h.publicName||h.name||"",percent:Number(h.percent||0),riskLevelFlag:Number(h.riskLevelFlag||0),addressExplorerUrl:h.addressExplorerUrl||""})).filter(x=>x.address);
   },
   async getTokenTransfers(token){
-   const data=await request("/v1/dex/tokens/transactions?platform="+encodeURIComponent(platform)+"&address="+encodeURIComponent(token.address));
-   return arr(data,["transactions","txs"]).map(t=>({...t,from:t.from||t.maker||t.walletAddress,to:t.to||t.pairAddress,dexSwap:true}));
+   const data=await request("/v1/dex/tokens/transactions?platform="+encodeURIComponent(platform)+"&address="+encodeURIComponent(token.address)+"&limit=100");
+   return arr(data,["swaps"]).map(t=>{const tp=Number(t.tp);return{...t,from:t.ma||t.maker||"",to:t.t0a||t.t1a||"",maker:t.ma||"",volumeUsd:Number(t.v||t.q||0),side:tp===0?"buy":tp===1?"sell":"unknown",dexSwap:true,type:tp===0?"confirmed_dex_spot_buy":tp===1?"dex_sell":"unknown"};});
   },
   async getWalletTransfers(){return[]},
   async getTokenMarketData(token){
