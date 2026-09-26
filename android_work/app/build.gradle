@@ -1,0 +1,4 @@
+plugins { id 'com.android.application' }
+android { namespace 'com.whalehunter.ai'; compileSdk 35
+ defaultConfig { applicationId 'com.whalehunter.ai'; minSdk 23; targetSdk 35; versionCode 2; versionName '2.0' }
+}
