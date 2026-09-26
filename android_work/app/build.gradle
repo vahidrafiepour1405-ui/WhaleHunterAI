@@ -3,11 +3,11 @@ android {
  namespace 'com.whalehunter.ai'
  compileSdk 35
  defaultConfig {
-  applicationId 'com.whalehunter.ai'
+  applicationId 'com.whalehunter.ai.v5'
   minSdk 23
   targetSdk 35
-  versionCode 3
-  versionName '3.0'
+  versionCode 5
+  versionName '5.0'
  }
  buildTypes {
   release {
