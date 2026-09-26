@@ -1,0 +1,1 @@
+export const CHAINS={ethereum:{id:1,name:"Ethereum",explorer:"https://etherscan.io"},base:{id:8453,name:"Base",explorer:"https://basescan.org"},arbitrum:{id:42161,name:"Arbitrum",explorer:"https://arbiscan.io"},polygon:{id:137,name:"Polygon",explorer:"https://polygonscan.com"},bsc:{id:56,name:"BNB Smart Chain",explorer:"https://bscscan.com"}};
