@@ -1,1 +1,104 @@
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Whale Hunter AI</title><style>body{margin:0;background:#050814;color:#fff;font-family:Arial,Tahoma,sans-serif}.app{max-width:520px;margin:auto;min-height:100vh;padding:18px}.card{margin:12px 0;padding:18px;border:1px solid #1d2a4c;border-radius:20px;background:#0e1629}.btn{width:100%;padding:14px;border:0;border-radius:14px;color:#fff;background:#635bff;font-weight:900}</style></head><body><main class="app"><section class="card"><h1>🐋 Whale Hunter AI</h1><p>Multi-Agent Crypto Intelligence</p></section><section class="card"><h2>پایش کل بازار</h2><p>Evidence Score: 82/100</p><p>نهنگ‌های مستقل • DEX/CEX • Accumulation</p><button class="btn">اجرای Multi-Analysis</button></section><section class="card"><h2>فرصت‌های بازار</h2><p>SWELL — Whale Activity</p><p>PENDLE — Accumulation</p><p>ENA — Multi-Whale</p><p>WIF — Smart Money</p></section><section class="card"><h2>Agentهای فعال</h2><p>🐋 Whale Hunter • 💱 DEX Buy • 🏦 CEX Flow</p><p>📊 Technical • 💧 Liquidity • 🛡 Security</p></section><section class="card"><p>CEX→wallet به‌تنهایی اثبات خرید تازه نیست.</p></section></main></body></html>
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Whale Hunter AI</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050814;color:#eef4ff;font-family:Arial,Tahoma,sans-serif}.app{max-width:560px;margin:auto;min-height:100vh;padding:16px 16px 42px}.top{padding:8px 4px 14px}.brand{font-size:26px;font-weight:900;letter-spacing:1px}.sub{color:#7181a4;font-size:10px;margin-top:5px;letter-spacing:1.5px}.card{margin:12px 0;padding:16px;border:1px solid #1c2b4d;border-radius:20px;background:linear-gradient(145deg,#0e172b,#0a1020);box-shadow:0 10px 28px #0005}.hero{border-color:#254e73}.hero h2{margin:0;color:#70e1ff;font-size:18px}.muted{color:#8291b1;font-size:12px;line-height:1.7}.btn{width:100%;padding:14px;border:0;border-radius:14px;color:#fff;background:linear-gradient(90deg,#5148e8,#16a8d8);font-weight:900;font-size:14px}.btn:disabled{opacity:.55}.status{font-size:10px;color:#7183a6;text-align:center;margin-top:9px;min-height:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#0a1121;border:1px solid #1b2945;border-radius:14px;padding:12px}.metric b{display:block;font-size:19px}.metric span{color:#7181a4;font-size:10px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.coin{font-size:18px;font-weight:900}.pill{font-size:9px;font-weight:900;padding:5px 8px;border-radius:9px;background:#143a32;color:#66e0a8}.pill.warn{background:#403719;color:#f2d36d}.pill.red{background:#421f2b;color:#ff819d}.bar{height:7px;background:#16223a;border-radius:9px;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#55d6ff,#8b6cff)}.small{font-size:10px;color:#6f80a3;margin-top:8px}.agent{padding:11px;border:1px solid #1a2844;border-radius:13px;background:#0a1120}.agent b{font-size:11px}.agent span{display:block;color:#55d7a0;font-size:8px;margin-top:5px;font-weight:900}.warning{border-color:#4a3e24;color:#c4b77f;font-size:11px;line-height:1.8}.empty{color:#7484a7;font-size:12px;text-align:center;padding:8px}.loading{display:inline-block;width:9px;height:9px;border:2px solid #4c617f;border-top-color:#70e1ff;border-radius:50%;animation:r .7s linear infinite}@keyframes r{to{transform:rotate(360deg)}}h3{margin:0 0 10px;font-size:14px}
+</style>
+</head>
+<body><main class="app">
+<header class="top"><div class="brand">🐋 WHALE HUNTER AI</div><div class="sub">MULTI-AGENT CRYPTO INTELLIGENCE</div></header>
+
+<section class="card hero"><h2>🌐 اسکن هوشمند بازار</h2><p class="muted">کشف دارایی‌ها، بررسی جریان‌ها و تفکیک شواهد نهنگی. داده‌های انتقالی بدون اثبات خرید، به‌عنوان خرید قطعی ثبت نمی‌شوند.</p><button id="scan" class="btn">اجرای Multi-Analysis</button><div id="status" class="status">آماده اسکن</div></section>
+
+<section class="grid">
+<div class="metric"><b id="assets">—</b><span>دارایی‌های کشف‌شده</span></div>
+<div class="metric"><b id="signals">—</b><span>سیگنال‌های نیازمند بررسی</span></div>
+<div class="metric"><b id="verified">—</b><span>شواهد DEX</span></div>
+<div class="metric"><b id="independent">—</b><span>نهنگ مستقل</span></div>
+</section>
+
+<section class="card"><h3>🎯 نتایج اسکن</h3><div id="results" class="empty">برای دریافت داده، اسکن را اجرا کن.</div></section>
+
+<section class="card"><h3>🧠 Agentهای فعال</h3><div class="grid" id="agents"></div></section>
+
+<section class="card warning"><b>⚠️ قانون شواهد</b><br>خروجی CEX→Wallet فقط «جریان خروجی از صرافی» است و به‌تنهایی اثبات خرید تازه نیست. خرید قطعی باید از شواهد Swap/DEX یا داده معتبر مشابه پشتیبانی شود. امتیاز شواهد احتمال رشد قیمت نیست.</section>
+</main>
+<script>
+const agents=[
+["🐋","Whale Hunter"],["🧹","Independent Filter"],["💱","DEX Buy"],["🏦","CEX Flow"],
+["🧠","Accumulation"],["🕸️","Whale Network"],["📊","Technical"],["💧","Liquidity"],
+["🪙","Tokenomics"],["🛡️","Security"],["🚨","False Signal"],["👑","Master Agent"]
+];
+document.getElementById("agents").innerHTML=agents.map(a=>'<div class="agent"><b>'+a[0]+' '+a[1]+'</b><span>READY</span></div>').join("");
+
+const chains={
+ethereum:"https://eth.blockscout.com/api/v2/tokens/",
+base:"https://base.blockscout.com/api/v2/tokens/",
+arbitrum:"https://arbitrum.blockscout.com/api/v2/tokens/",
+optimism:"https://optimism.blockscout.com/api/v2/tokens/",
+polygon:"https://polygon.blockscout.com/api/v2/tokens/"
+};
+
+function esc(s){return String(s??"").replace(/[&<>"]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[x]));}
+function pct(n){return Math.max(0,Math.min(100,Math.round(Number(n)||0)));}
+
+async function getDiscovery(){
+ const [boosts,profiles]=await Promise.all([
+  fetch("https://api.dexscreener.com/token-boosts/latest/v1").then(r=>r.json()).catch(()=>[]),
+  fetch("https://api.dexscreener.com/token-profiles/latest/v1").then(r=>r.json()).catch(()=>[])
+ ]);
+ const all=[...(Array.isArray(boosts)?boosts:[]),...(Array.isArray(profiles)?profiles:[])];
+ const seen=new Set(),out=[];
+ for(const x of all){
+  const chain=String(x.chainId||"").toLowerCase(),address=x.tokenAddress;
+  if(!address||seen.has(chain+":"+address)||!chains[chain])continue;
+  seen.add(chain+":"+address);
+  out.push({chain,address,symbol:x.symbol||x.tokenSymbol||"UNKNOWN",name:x.name||x.tokenName||"Unknown"});
+  if(out.length>=20)break;
+ }
+ return out;
+}
+
+async function holderCheck(t){
+ try{
+  const url=chains[t.chain]+encodeURIComponent(t.address)+"/holders?items_count=20";
+  const j=await fetch(url).then(r=>r.json());
+  const holders=Array.isArray(j?.items)?j.items:[];
+  const positive=holders.filter(h=>Number(h?.value||0)>0).length;
+  const top=holders[0]?.value||0;
+  return {holders:holders.length,positive,top};
+ }catch(e){return {holders:0,positive:0,top:0};}
+}
+
+async function scan(){
+ const btn=document.getElementById("scan"),st=document.getElementById("status"),box=document.getElementById("results");
+ btn.disabled=true;st.innerHTML='<span class="loading"></span> در حال کشف بازار...';box.innerHTML="";
+ try{
+  const tokens=await getDiscovery();
+  document.getElementById("assets").textContent=tokens.length||"0";
+  if(!tokens.length){box.innerHTML='<div class="empty">داده عمومی کشف بازار در دسترس نیست.</div>';return;}
+  let independent=0;
+  const checked=[];
+  for(let i=0;i<Math.min(tokens.length,10);i++){
+   st.textContent="تحلیل "+(i+1)+" از "+Math.min(tokens.length,10)+" …";
+   const h=await holderCheck(tokens[i]);
+   independent+=h.positive;
+   checked.push({...tokens[i],...h});
+  }
+  document.getElementById("independent").textContent=independent||"0";
+  document.getElementById("verified").textContent="0";
+  document.getElementById("signals").textContent=checked.length;
+  box.innerHTML=checked.map((t,i)=>{
+   const score=t.positive>=3?60:t.positive>0?35:10;
+   const label=t.positive>=3?"MULTI-WHALE CHECK":"WATCH";
+   return '<div class="card" style="margin:8px 0;padding:13px"><div class="row"><span class="coin">'+esc(t.symbol)+'</span><span class="pill '+(score<30?"warn":"")+'">'+label+'</span></div><div class="small">'+esc(t.chain)+' • '+esc(t.address.slice(0,10))+'…'+esc(t.address.slice(-6))+'</div><div class="bar"><i style="width:'+score+'%"></i></div><div class="small">Evidence '+score+'/100 • holders observed: '+t.holders+'</div></div>';
+  }).join("");
+  st.textContent="اسکن تمام شد • "+checked.length+" دارایی بررسی شد";
+ }catch(e){st.textContent="خطا در دریافت داده عمومی";box.innerHTML='<div class="empty">'+esc(e.message||e)+'</div>';}
+ finally{btn.disabled=false;}
+}
+document.getElementById("scan").onclick=scan;
+</script>
+</body></html>
