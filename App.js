@@ -2,6 +2,7 @@ import React,{useMemo,useState}from"react";
 import{SafeAreaView,View,Text,ScrollView,StyleSheet,StatusBar,Pressable,ActivityIndicator}from"react-native";
 import{AGENTS}from"./src/agents/registry";
 import RankIndicator from"./src/components/RankIndicator";
+import WhaleProfile from"./src/components/WhaleProfile";
 import{getProvider}from"./src/services/providers";
 import{scanMarket}from"./src/services/marketScanner";
 import{calculateRankIndicator}from"./src/agents/rankIndicator";
@@ -23,7 +24,7 @@ export default function App(){
  <Text style={s.brand}>WHALE HUNTER AI</Text><Text style={s.sub}>MULTI-AGENT CRYPTO INTELLIGENCE</Text>
  <View style={s.hero}><Text style={s.heroTitle}>🐋 GLOBAL WHALE SCAN</Text><Text style={s.heroText}>Independent whales • DEX/CEX separation • evidence + ranking</Text><Pressable style={s.scan} onPress={runScan}><Text style={s.scanText}>{scanning?"SCANNING…":"SCAN MARKET"}</Text></Pressable><Text style={s.status}>{scanning?<ActivityIndicator size="small" color="#70e1ff"/>:status}</Text></View>
  <Text style={s.section}>TOP SIGNALS</Text>
- {signals.map(x=><View key={x.symbol} style={s.card}><View style={s.row}><Text style={s.coin}>{x.symbol}</Text><Text style={s.signal}>{x.icon}</Text></View><Text style={s.title}>{x.label}</Text><View style={s.metrics}><Text style={s.metric}>Evidence <Text style={s.value}>{x.evidence}/100</Text></Text><Text style={s.metric}>Rank <Text style={s.value}>{x.rank}%</Text></Text></View><RankIndicator rankPercent={x.rank} rank={x.position} band={x.band}/></View>)}
+ {signals.map(x=><View key={x.symbol} style={s.card}><View style={s.row}><Text style={s.coin}>{x.symbol}</Text><Text style={s.signal}>{x.icon}</Text></View><Text style={s.title}>{x.label}</Text><View style={s.metrics}><Text style={s.metric}>Evidence <Text style={s.value}>{x.evidence}/100</Text></Text><Text style={s.metric}>Rank <Text style={s.value}>{x.rank}%</Text></Text></View><RankIndicator rankPercent={x.rank} rank={x.position} band={x.band}/>{x.whaleProfiles?.slice(0,3).map(w=><WhaleProfile key={w.address} whale={w}/>)}</View>)}
  <Text style={s.section}>ACTIVE AGENTS • {agents.length}</Text><View style={s.grid}>{agents.map(a=><View key={a.id} style={s.agent}><Text style={s.icon}>{a.icon}</Text><Text style={s.agentName}>{a.name}</Text><Text style={s.ready}>READY</Text></View>)}</View>
  <View style={s.note}><Text style={s.noteTitle}>⚠️ EVIDENCE RULE</Text><Text style={s.noteText}>CEX→wallet is not proof of a fresh purchase. Confirmed DEX swaps are separated from transfer-only activity.</Text></View>
  </ScrollView></SafeAreaView>
