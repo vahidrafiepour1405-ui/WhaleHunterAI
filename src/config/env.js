@@ -1,0 +1,1 @@
+export const ENV={ALCHEMY_API_KEY:"",DATA_PROVIDER:"alchemy"};
