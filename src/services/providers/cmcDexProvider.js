@@ -34,7 +34,7 @@ export function createCmcDexProvider({network="ethereum"}={}){
   async getTokenTransfers(token){
    const path="/v1/dex/tokens/transactions?platform="+encodeURIComponent(networkSlug)+"&address="+encodeURIComponent(token.address);
    const data=await request(path);
-   return Array.isArray(data)?data:(data?.transactions||data?.txs||[]);
+   const rows=Array.isArray(data)?data:(data?.transactions||data?.txs||[]);return rows.map(t=>({...t,from:t.from||t.maker||t.walletAddress,to:t.to||t.pairAddress,dexSwap:Number(t.type)===0,type:Number(t.type)===0?"confirmed_dex_spot_buy":Number(t.type)===1?"wallet_to_dex":"unknown"}));
   },
   async getWalletTransfers(){return[]},
   async getTokenMarketData(token){
