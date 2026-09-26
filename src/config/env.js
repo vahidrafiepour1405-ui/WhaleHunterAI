@@ -1,1 +1,1 @@
-export const ENV={ALCHEMY_API_KEY:"",DATA_PROVIDER:"alchemy"};
+export const ENV={DATA_PROVIDER:"cmc",CHAIN:"ethereum",ALCHEMY_API_KEY:""};
