@@ -167,6 +167,8 @@ export async function scanToken({chain,address,cmcId=null}){
 export async function discoverAndScanMarket(limit=100){
   const deepMax=Math.min(100,Math.max(1,Number(limit)||100));
   const surveillanceTop=500;
+  const rotationBatch=Math.min(100,Math.max(1,Number(process.env.TOP500_DEEP_SCAN_BATCH||100)));
+  const rotationOffset=Math.floor(Date.now()/3600000)%Math.max(1,Math.ceil(surveillanceTop/rotationBatch));
   const [cmcRes,geckoRes]=await Promise.allSettled([
     getListings(surveillanceTop),
     (async()=>{
@@ -230,7 +232,9 @@ export async function discoverAndScanMarket(limit=100){
   }).filter(Boolean);
   const allCandidates=[...candidates.values()].sort((a,b)=>b.priority-a.priority);
   const top500=allCandidates.slice(0,surveillanceTop);
-  const list=top500.slice(0,deepMax);
+  const prioritySet=top500.slice(0,deepMax);
+  const rotatedSet=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
+  const list=[...new Map([...prioritySet,...rotatedSet].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()];
   const results=[];
   for(const candidate of list){
     try{
@@ -270,7 +274,8 @@ export async function discoverAndScanMarket(limit=100){
       majorAssetWatchlist:major,
       majorMarketWatch,
       usdtFirst:true,
-      coverageModel:"TOP500_PRIORITY_PLUS_FULL_MARKET_DISCOVERY"
+      coverageModel:"TOP500_PRIORITY_PLUS_ROTATING_DEEP_SCAN_PLUS_FULL_MARKET_DISCOVERY",
+      rotation:{batchSize:rotationBatch,batchIndex:rotationOffset,deepScannedCount:list.length}
     },
     results
   };
