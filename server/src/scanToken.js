@@ -164,15 +164,16 @@ export async function scanToken({chain,address,cmcId=null}){
   return output;
 }
 
-export async function discoverAndScanMarket(limit=30){
-  const max= Math.min(30,Math.max(1,Number(limit)||30));
+export async function discoverAndScanMarket(limit=100){
+  const deepMax=Math.min(100,Math.max(1,Number(limit)||100));
+  const surveillanceTop=500;
   const [cmcRes,geckoRes]=await Promise.allSettled([
-    getListings(Math.max(100,max*5)),
+    getListings(surveillanceTop),
     (async()=>{
       const url=new URL("https://api.coingecko.com/api/v3/coins/markets");
       url.searchParams.set("vs_currency","usd");
       url.searchParams.set("order","market_cap_desc");
-      url.searchParams.set("per_page",String(Math.max(100,max*5)));
+      url.searchParams.set("per_page",String(surveillanceTop));
       url.searchParams.set("page","1");
       url.searchParams.set("sparkline","false");
       const key=process.env.COINGECKO_API_KEY;
@@ -227,7 +228,9 @@ export async function discoverAndScanMarket(limit=30){
       watchReason:"MAJOR_MARKET_ASSET"
     };
   }).filter(Boolean);
-  const list=[...candidates.values()].sort((a,b)=>b.priority-a.priority).slice(0,max);
+  const allCandidates=[...candidates.values()].sort((a,b)=>b.priority-a.priority);
+  const top500=allCandidates.slice(0,surveillanceTop);
+  const list=top500.slice(0,deepMax);
   const results=[];
   for(const candidate of list){
     try{
@@ -258,7 +261,17 @@ export async function discoverAndScanMarket(limit=30){
     ok:true,
     timestamp:new Date().toISOString(),
     count:results.length,
-    universe:{requested:max,cmcAvailable:cmc.length>0,coingeckoAvailable:gecko.length>0,majorAssetWatchlist:major,majorMarketWatch,usdtFirst:true},
+    universe:{
+      requestedDeepScans:deepMax,
+      surveillanceUniverseSize:Math.min(surveillanceTop,allCandidates.length),
+      surveillanceUniverse:"TOP_500_BY_MARKET_CAP_CROSS_CHECKED",
+      cmcAvailable:cmc.length>0,
+      coingeckoAvailable:gecko.length>0,
+      majorAssetWatchlist:major,
+      majorMarketWatch,
+      usdtFirst:true,
+      coverageModel:"TOP500_PRIORITY_PLUS_FULL_MARKET_DISCOVERY"
+    },
     results
   };
 }
