@@ -63,7 +63,7 @@ export async function scanToken({chain,address,cmcId=null}){
   const activeHolders=classified.filter(x=>!x.classify.excluded);
   const minWhaleUsd=Math.max(0,Number(process.env.MIN_WHALE_USD||100000));
   const whaleHolders=activeHolders.filter(x=>Number(x.Balance?.AmountInUSD||0)>=minWhaleUsd);
-  const whaleAnalysisHolders=whaleHolders.length?whaleHolders:activeHolders.filter(x=>Number(x.Balance?.AmountInUSD||0)>0).slice(0,100);
+  const whaleAnalysisHolders=whaleHolders;
   const accum24=rankAccumulation(whaleAnalysisHolders,flows24);
   const accum7=rankAccumulation(whaleAnalysisHolders,flows7);
   const realAccum24=accum24.filter(x=>x.netFlow>0);
@@ -110,6 +110,7 @@ export async function scanToken({chain,address,cmcId=null}){
       providers:{...providerStatus(),coingecko:Boolean(process.env.COINGECKO_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)},
       holderRows:holders.length,
       qualifiedWhaleRows:whaleAnalysisHolders.length,
+      whaleThresholdMet:whaleHolders.length>0,
       minWhaleUsd,
       labeledRows:labelRows.length,
       whaleDexBuyRows:confirmedWhaleBuys24.length,
@@ -201,6 +202,25 @@ export async function discoverAndScanMarket(limit=30){
       if(!candidates.has(key))candidates.set(key,{address,chain,cmcAsset, cgAsset:g,priority});
     }
   }
+  const majorMarketWatch=major.map(symbol=>{
+    const ca=cmcBySymbol.get(symbol)||null;
+    const ga=gecko.find(x=>String(x.symbol||"").toUpperCase()===symbol)||null;
+    if(!ca&&!ga)return null;
+    return{
+      symbol,
+      name:ca?.name||ga?.name||symbol,
+      cmc:ca,
+      coingecko:ga?{
+        id:ga.id,
+        marketCapRank:ga.market_cap_rank,
+        marketCapUsd:ga.market_cap,
+        priceUsd:ga.current_price,
+        volume24hUsd:ga.total_volume,
+        change24h:ga.price_change_percentage_24h
+      }:null,
+      watchReason:"MAJOR_MARKET_ASSET"
+    };
+  }).filter(Boolean);
   const list=[...candidates.values()].sort((a,b)=>b.priority-a.priority).slice(0,max);
   const results=[];
   for(const candidate of list){
@@ -232,7 +252,7 @@ export async function discoverAndScanMarket(limit=30){
     ok:true,
     timestamp:new Date().toISOString(),
     count:results.length,
-    universe:{requested:max,cmcAvailable:cmc.length>0,coingeckoAvailable:gecko.length>0,majorAssetWatchlist:major,usdtFirst:true},
+    universe:{requested:max,cmcAvailable:cmc.length>0,coingeckoAvailable:gecko.length>0,majorAssetWatchlist:major,majorMarketWatch,usdtFirst:true},
     results
   };
 }
