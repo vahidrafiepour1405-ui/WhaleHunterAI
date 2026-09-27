@@ -1,4 +1,4 @@
-import {getDexPairs,getAlchemyTransfers,normalizeChain} from "./providers.js";
+import {getDexPairs,normalizeChain,providerStatus} from "./providers.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -27,11 +27,8 @@ export async function scanToken({chain,address}){
   const pairData=pairs.map(classifyPair).sort((a,b)=>b.volume24hUsd-a.volume24hUsd);
   const best=pairData[0]||null;
 
-  let transfers=[];
-  const network=normalized==="ethereum"?"eth-mainnet":normalized==="polygon"?"polygon-mainnet":normalized==="arbitrum"?"arb-mainnet":normalized==="base"?"base-mainnet":null;
-  if(network&&process.env.ALCHEMY_API_KEY)transfers=await getAlchemyTransfers({network,address});
-
-  const cexHints=transfers.filter(t=>CEX_HINTS.some(x=>String(t.to||"").toLowerCase().includes(x)||String(t.from||"").toLowerCase().includes(x)));
+  const transfers=[];
+  const cexHints=[];
   const confirmedDexBuys=pairData.filter(x=>x.confirmedDexSpotBuyActivity).length;
 
   const evidence=Math.max(0,Math.min(100,
@@ -49,13 +46,14 @@ export async function scanToken({chain,address}){
     address,
     dataQuality:{
       dexPairsFound:pairData.length,
-      transferHistoryConfigured:Boolean(process.env.ALCHEMY_API_KEY),
+      transferHistoryConfigured:false,
       holderDiscoveryConfigured:false,
-      note:"Transfer activity alone is never classified as a confirmed buy."
+      providers:providerStatus(),
+      note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
     market:{bestPair:best,pairs:pairData.slice(0,20)},
     whale:{status:"HOLDER_PROVIDER_REQUIRED",independentWhales:[],accumulating:[],excluded:[]},
-    flows:{transferCount:transfers.length,cexHintCount:cexHints.length},
+    flows:{transferCount:0,cexHintCount:0},
     evidence:{score:evidence,confirmedDexBuyActivity:confirmedDexBuys>0},
     limitations:[
       "Top-holder discovery requires a holder/indexing provider.",
