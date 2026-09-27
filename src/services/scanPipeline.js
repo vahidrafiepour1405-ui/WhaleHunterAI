@@ -1,3 +1,4 @@
+import {analyzeOHLCV} from "../agents/technicalEngine";
 import {calculateEvidenceScore} from "../agents/evidenceScore";
 import {detectFalseSignal} from "../agents/falseSignal";
 import {concentrationStats} from "../agents/concentration";
@@ -32,7 +33,7 @@ export function runMultiAgentPipeline({holders=[],events=[],metrics={},market={}
    cexFlow:{status:"EXECUTED",outflowUsd:accumulation.cexOutflowUsd,inflowUsd:accumulation.cexInflowUsd},
    accumulation:{status:"EXECUTED",netEvidenceUsd:accumulation.netEvidenceUsd},
    whaleNetwork:{status:"EXECUTED",multiWhale:multiWhale.detected},
-   technical:{status:"EXECUTED",data:technical},
+   technical:{status:"EXECUTED",data:{...technical,ohlcv:technical?.ohlcv?analyzeOHLCV(technical.ohlcv):technical?.ohlcv}},
    smartMoney:{status:"EXECUTED",data:liquidity},
    volume:{status:"EXECUTED",data:volume},
    liquidity:{status:"EXECUTED",data:liquidity},
