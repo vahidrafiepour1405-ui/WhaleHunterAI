@@ -42,7 +42,7 @@ export async function scanToken({chain,address}){
   }
 
   const pairAddresses=pairData.map(x=>x.pairAddress).filter(Boolean);
-  const classified=holders.map(h=>{const address=h.Holder?.Address;return {...h,address,classify:classifyAddress(address,{tokenAddress:address,pairAddresses})};});
+  const classified=holders.map(h=>{const holderAddress=h.Holder?.Address;return {...h,address:holderAddress,classify:classifyAddress(holderAddress,{tokenAddress:address,pairAddresses})};});
   const activeHolders=classified.filter(x=>!x.classify.excluded);
   const accum24=rankAccumulation(activeHolders,flows24);
   const accum7=rankAccumulation(activeHolders,flows7);
