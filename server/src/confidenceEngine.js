@@ -24,7 +24,8 @@ export function buildConfidence(scan){
     sourceStatus("arkham",Boolean(providers.arkham),Boolean(dq.arkhamRows||0)>0,Number(dq.arkhamRows||0)>0?5:0)
   ];
   const active=sources.filter(x=>x.available);
-  const independentSourceCount=active.filter(x=>["bitquery","address_labels","wallet_dex_trades","nansen","arkham","coinmarketcap","coingecko"].includes(x.name)).length;
+  const independentSourceCount=active.filter(x=>["bitquery","address_labels","wallet_dex_trades","nansen","arkham"].includes(x.name)).length;
+  const marketSourceCount=active.filter(x=>["coinmarketcap","coingecko"].includes(x.name)).length;
   const contradictions=[];
   if(Number(best.sells24h||0)>Number(best.buys24h||0))contradictions.push("MARKET_SELL_PRESSURE");
   if(acc24.length===0&&confirmed.length===0)contradictions.push("NO_WHALE_ACCUMULATION_CONFIRMATION");
@@ -48,7 +49,7 @@ export function buildConfidence(scan){
   if(Number(scan.evidence?.nansenWhaleNetFlow24hUsd||0)>0)raw+=5;
   if(Number(scan.evidence?.nansenWhaleNetFlow7dUsd||0)>0)raw+=4;
   const coverage=active.length?active.reduce((s,x)=>s+x.evidence,0)/Math.max(1,sources.reduce((s,x)=>s+(x.configured?1:0),0)*1):0;
-  const agreementBonus=independentSourceCount>=5?10:independentSourceCount>=4?8:independentSourceCount>=3?5:independentSourceCount>=2?3:0;
+  const agreementBonus=(independentSourceCount>=5?10:independentSourceCount>=4?8:independentSourceCount>=3?5:independentSourceCount>=2?3:0)+(marketSourceCount>=2?3:marketSourceCount>=1?1:0);
   const sourceCap=independentSourceCount>=5?100:independentSourceCount===4?90:independentSourceCount===3?80:independentSourceCount===2?65:independentSourceCount===1?50:25;
   const confidence=clamp(Math.min(sourceCap,Math.round(raw+agreementBonus)));
   const dataCompleteness=clamp(Math.round((active.length/Math.max(1,sources.length))*100));
@@ -58,6 +59,7 @@ export function buildConfidence(scan){
     label:confidence>=80?"HIGH":confidence>=60?"MODERATE":confidence>=40?"LOW":"INSUFFICIENT",
     dataCompleteness,
     independentSourceCount,
+    marketSourceCount,
     sources,
     contradictions,
     calibrated,
