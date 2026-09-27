@@ -5,6 +5,7 @@ import {getAddressLabels,isNonIndependentLabel} from "./addressLabels.js";
 import {getWalletTokenBuys,aggregateWalletBuys} from "./dexTradeProvider.js";
 import {buildConfidence} from "./confidenceEngine.js";
 import {getNansenHolders,getNansenWhoBoughtSold,getNansenFlowIntelligence,normalizeNansenHolder,normalizeNansenBuyer,summarizeNansenFlow} from "./nansenProvider.js";
+import {analyzeTokenStructure} from "./tokenAnalysisEngine.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -51,6 +52,8 @@ export async function scanToken({chain,address}){
   const accum7=rankAccumulation(activeHolders,flows7);
   const realAccum24=accum24.filter(x=>x.netFlow>0);
   const realAccum7=accum7.filter(x=>x.netFlow>0);
+  const activeSet=new Set(activeHolders.map(x=>String(x.address||"").toLowerCase()).filter(Boolean));
+  const internalHolderTransfers24h=flows24.reduce((n,row)=>{const t=row.Transfer||{};return n+(activeSet.has(String(t.Sender||"").toLowerCase())&&activeSet.has(String(t.Receiver||"").toLowerCase())?1:0);},0);
   let nansenHolders=[]; let nansenBuyers=[]; let nansenFlow1d=null; let nansenFlow7d=null; let nansenError=null;
   if(process.env.NANSEN_API_KEY){
     try{
@@ -103,7 +106,7 @@ export async function scanToken({chain,address}){
     market:{bestPair:best,pairs:pairData.slice(0,20)},
     nansen:{holders:nansenHolders.slice(0,100),buyers24h:nansenBuyers.slice(0,100),flow1d:nansenFlow1d,flow7d:nansenFlow7d},
     whale:{status:holders.length||nansenHolders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
-    flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,cexHintCount:0},
+    flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,internalHolderTransfers24h,cexHintCount:0},
     evidence:{
       score:evidence,
       confirmedDexBuyActivity:confirmedDexBuys>0,
@@ -124,6 +127,7 @@ export async function scanToken({chain,address}){
       "Confidence is evidence strength unless historical backtest calibration is available."
     ]
   };
+  output.analysis=analyzeTokenStructure(output);
   output.confidence=buildConfidence(output);
   return output;
 }
