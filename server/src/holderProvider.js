@@ -17,12 +17,12 @@ export async function getTopHolders({chain,address,limit=100}){
   const query=`query($address:String!,$limit:Int!){
     EVM(network:${network},dataset:combined){
       Holders(
-        where:{Currency:{SmartContract:{is:$address}},Balance:{Amount:{gt:"0"}}}
+        where:{Currency:{SmartContract:{is:$address}}}
         orderBy:{descending:Balance_Amount}
         limit:{count:$limit}
       ){
         Holder{Address}
-        Balance{Amount AmountInUSD FirstChangeTime LastChangeTime UpdateCount}
+        Balance{Amount(selectWhere:{gt:"0"}) AmountInUSD FirstChangeTime LastChangeTime UpdateCount}
       }
     }
   }`;
