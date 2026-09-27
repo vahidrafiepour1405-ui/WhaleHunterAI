@@ -238,6 +238,7 @@ export async function discoverAndScanMarket(limit=100){
     const a=x.cmcAsset||{};
     const g=x.cgAsset||{};
     const volume=Number(a.volume24hUsd||g.total_volume||0);
+    const usdtMarketCount=Number(a.usdtPairCount||0);
     const change=Math.abs(Number(a.change24h??g.price_change_percentage_24h??0));
     const marketRank=Number(a.rank||g.market_cap_rank||500);
     const usdtHint=(String(a.symbol||"")?1:0);
@@ -255,6 +256,7 @@ export async function discoverAndScanMarket(limit=100){
     try{
       const result=await scanToken({chain:candidate.chain,address:candidate.address,cmcId:candidate.cmcAsset?.cmcId||null});
       result.marketDiscovery={
+        surveillanceTier:(candidate.cmcAsset?.rank||candidate.cgAsset?.market_cap_rank||999)<=500?"TOP500":"OUTSIDE_TOP500",
         cmc:candidate.cmcAsset,
         coingecko:candidate.cgAsset?{
           id:candidate.cgAsset.id,
