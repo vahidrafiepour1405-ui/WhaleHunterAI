@@ -64,4 +64,28 @@ export async function scanToken({chain,address}){
     ]
   };
 }
-\nexport async function discoverAndScanMarket(limit=20){\n  const key=process.env.COINGECKO_API_KEY;\n  const url=new URL("https://api.coingecko.com/api/v3/coins/markets");\n  url.searchParams.set("vs_currency","usd");\n  url.searchParams.set("order","volume_desc");\n  url.searchParams.set("per_page",String(limit));\n  url.searchParams.set("page","1");\n  url.searchParams.set("sparkline","false");\n  const headers=key?{"x-cg-demo-api-key":key}:{};\n  const response=await fetch(url,{headers});\n  if(!response.ok)throw new Error("COINGECKO_"+response.status);\n  const coins=await response.json();\n  const results=[];\n  for(const coin of coins){\n    const address=coin.platforms?.ethereum||coin.platforms?.["arbitrum-one"]||coin.platforms?.base||coin.platforms?.["polygon-pos"];\n    if(!address)continue;\n    try{\n      const result=await scanToken({chain:coin.platforms?.ethereum?"ethereum":coin.platforms?.base?"base":coin.platforms?.["arbitrum-one"]?"arbitrum":"polygon",address});\n      results.push({...result,symbol:coin.symbol?.toUpperCase(),name:coin.name,coingeckoId:coin.id,priceChange24h:coin.price_change_percentage_24h});\n    }catch(error){results.push({ok:false,symbol:coin.symbol?.toUpperCase(),name:coin.name,error:error.message||"SCAN_ERROR"});}\n  }\n  results.sort((a,b)=>(b.evidence?.score||0)-(a.evidence?.score||0));\n  return {ok:true,timestamp:new Date().toISOString(),count:results.length,results};\n}\n
+
+export async function discoverAndScanMarket(limit=20){
+  const key=process.env.COINGECKO_API_KEY;
+  const url=new URL("https://api.coingecko.com/api/v3/coins/markets");
+  url.searchParams.set("vs_currency","usd");
+  url.searchParams.set("order","volume_desc");
+  url.searchParams.set("per_page",String(limit));
+  url.searchParams.set("page","1");
+  url.searchParams.set("sparkline","false");
+  const headers=key?{"x-cg-demo-api-key":key}:{};
+  const response=await fetch(url,{headers});
+  if(!response.ok)throw new Error("COINGECKO_"+response.status);
+  const coins=await response.json();
+  const results=[];
+  for(const coin of coins){
+    const address=coin.platforms?.ethereum||coin.platforms?.["arbitrum-one"]||coin.platforms?.base||coin.platforms?.["polygon-pos"];
+    if(!address)continue;
+    try{
+      const result=await scanToken({chain:coin.platforms?.ethereum?"ethereum":coin.platforms?.base?"base":coin.platforms?.["arbitrum-one"]?"arbitrum":"polygon",address});
+      results.push({...result,symbol:coin.symbol?.toUpperCase(),name:coin.name,coingeckoId:coin.id,priceChange24h:coin.price_change_percentage_24h});
+    }catch(error){results.push({ok:false,symbol:coin.symbol?.toUpperCase(),name:coin.name,error:error.message||"SCAN_ERROR"});}
+  }
+  results.sort((a,b)=>(b.evidence?.score||0)-(a.evidence?.score||0));
+  return {ok:true,timestamp:new Date().toISOString(),count:results.length,results};
+}
