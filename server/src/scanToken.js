@@ -4,6 +4,7 @@ import {classifyAddress} from "./addressClassifier.js";
 import {getAddressLabels,isNonIndependentLabel} from "./addressLabels.js";
 import {getWalletTokenBuys,aggregateWalletBuys} from "./dexTradeProvider.js";
 import {buildConfidence} from "./confidenceEngine.js";
+import {getNansenHolders,getNansenWhoBoughtSold,getNansenFlowIntelligence,normalizeNansenHolder,normalizeNansenBuyer,summarizeNansenFlow} from "./nansenProvider.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -50,6 +51,22 @@ export async function scanToken({chain,address}){
   const accum7=rankAccumulation(activeHolders,flows7);
   const realAccum24=accum24.filter(x=>x.netFlow>0);
   const realAccum7=accum7.filter(x=>x.netFlow>0);
+  let nansenHolders=[]; let nansenBuyers=[]; let nansenFlow1d=null; let nansenFlow7d=null; let nansenError=null;
+  if(process.env.NANSEN_API_KEY){
+    try{
+      const [nh,nb,n1,n7]=await Promise.all([
+        getNansenHolders({chain:normalized,address,limit:100}),
+        getNansenWhoBoughtSold({chain:normalized,address,hours:24}),
+        getNansenFlowIntelligence({chain:normalized,address,timeframe:"1d"}),
+        getNansenFlowIntelligence({chain:normalized,address,timeframe:"7d"})
+      ]);
+      nansenHolders=nh.rows.map(normalizeNansenHolder);
+      nansenBuyers=nb.rows.map(normalizeNansenBuyer);
+      nansenFlow1d=summarizeNansenFlow(n1.rows);
+      nansenFlow7d=summarizeNansenFlow(n7.rows);
+    }catch(error){nansenError=error.message||"NANSEN_ERROR";}
+  }
+
   let walletBuys24=[]; let tradeError=null;
   if(holders.length&&process.env.BITQUERY_API_KEY){try{const rows=await getWalletTokenBuys({chain:normalized,address,holderAddresses:activeHolders.map(x=>x.address),hours:24});walletBuys24=aggregateWalletBuys(rows);}catch(error){tradeError=error.message||"DEX_TRADE_ERROR";}}
   const buyMap=new Map(walletBuys24.map(x=>[String(x.address).toLowerCase(),x]));
@@ -71,22 +88,39 @@ export async function scanToken({chain,address}){
       dexPairsFound:pairData.length,
       transferHistoryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY),
-      providers:{...providerStatus(),walletDexTrades:Boolean(process.env.BITQUERY_API_KEY),coingecko:Boolean(process.env.COINGECKO_API_KEY),nansen:Boolean(process.env.NANSEN_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)},
+      providers:{...providerStatus(),coingecko:Boolean(process.env.COINGECKO_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)},
       holderRows:holders.length,      labeledRows:labelRows.length,
       whaleDexBuyRows:confirmedWhaleBuys24.length,
       tradeError,
       holderError,
+      nansenRows:nansenHolders.length,
+      nansenBuyerRows:nansenBuyers.length,
+      nansenFlow1d,
+      nansenFlow7d,
+      nansenError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
     market:{bestPair:best,pairs:pairData.slice(0,20)},
-    whale:{status:holders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
+    nansen:{holders:nansenHolders.slice(0,100),buyers24h:nansenBuyers.slice(0,100),flow1d:nansenFlow1d,flow7d:nansenFlow7d},
+    whale:{status:holders.length||nansenHolders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,cexHintCount:0},
-    evidence:{score:evidence,confirmedDexBuyActivity:confirmedDexBuys>0},
+    evidence:{
+      score:evidence,
+      confirmedDexBuyActivity:confirmedDexBuys>0,
+      nansenWhaleNetFlow24hUsd:Number(nansenFlow1d?.whaleNetFlowUsd||0),
+      nansenWhaleNetFlow7dUsd:Number(nansenFlow7d?.whaleNetFlowUsd||0),
+      nansenBuyerCount24h:nansenBuyers.length,
+      crossSourceWhaleFlowAgreement:
+        (nansenFlow1d && realAccum24.length>0)
+          ? Math.sign(Number(nansenFlow1d.whaleNetFlowUsd||0))===Math.sign(realAccum24.reduce((s,x)=>s+Number(x.netFlow||0),0))
+          : null
+    },
     confidence:null,
     limitations:[
       "Top-holder discovery requires a holder/indexing provider.",
       "DEX pair buy/sell counts are market-level activity, not proof that a specific whale bought.",
       "CEX labels require a maintained address-label dataset.",
+      "Nansen data is cross-check evidence when its API key and chain coverage are active.",
       "Confidence is evidence strength unless historical backtest calibration is available."
     ]
   };
