@@ -24,4 +24,4 @@ jobs:
       - run: node --check src/scanToken.js
       - run: node --check src/holderProvider.js
       - run: node --check src/addressClassifier.js
-      - run: node --check src/masterSignal.js
+      - run: node --check src/masterSignal.js\n      - run: node --check src/confidenceEngine.js
