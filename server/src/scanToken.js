@@ -199,7 +199,7 @@ export async function discoverAndScanMarket(limit=30){
   const results=[];
   for(const candidate of list){
     try{
-      const result=await scanToken({chain:candidate.chain,address:candidate.address});
+      const result=await scanToken({chain:candidate.chain,address:candidate.address,cmcId:candidate.cmcAsset?.cmcId||null});
       result.marketDiscovery={
         cmc:candidate.cmcAsset,
         coingecko:candidate.cgAsset?{
