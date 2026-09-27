@@ -127,6 +127,7 @@ export async function scanToken({chain,address,cmcId=null}){
       technicalError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
+    technical:technical||{score:0,state:"UNAVAILABLE",candles:[],ema20:null,ema50:null,rsi14:null,volumeRatio:null,change24h:null,change7d:null,note:"Technical analysis unavailable."},
     market:{
       bestPair:best,
       pairs:pairData.slice(0,20),
@@ -197,7 +198,6 @@ export async function discoverAndScanMarket(limit=100){
       if(address)cgByContract.set(String(platform).toLowerCase()+":"+String(address).toLowerCase(),g);
     }
   }
-  const cmcById=new Map(cmc.filter(x=>x.cmcId).map(x=>[String(x.cmcId),x]));
   const platformChain=name=>{
     const n=String(name||"").toLowerCase();
     if(n.includes("ethereum"))return"ethereum";
