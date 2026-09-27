@@ -39,6 +39,10 @@ export function buildConfidence(scan){
   raw+=Number(best.buys24h||0)>Number(best.sells24h||0)?10:0;
   raw+=Number(best.liquidityUsd||0)>=100000?10:Number(best.liquidityUsd||0)>=25000?5:0;
   raw+=Number(best.volume24hUsd||0)>=100000?5:Number(best.volume24hUsd||0)>=25000?3:0;
+  const technicalScore=Number(scan.evidence?.technicalScore||0);
+  if(technicalScore>=70)raw+=6;
+  else if(technicalScore>=55)raw+=3;
+  else if(technicalScore<=35)raw-=5;
   raw-=contradictions.length*7;
   const analysis=scan.analysis||{};
   const manipulationRisk=Number(analysis.manipulationRisk?.heuristicScore||0);
