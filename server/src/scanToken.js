@@ -143,28 +143,82 @@ export async function scanToken({chain,address}){
   return output;
 }
 
-export async function discoverAndScanMarket(limit=20){
-  const key=process.env.COINGECKO_API_KEY;
-  const url=new URL("https://api.coingecko.com/api/v3/coins/markets");
-  url.searchParams.set("vs_currency","usd");
-  url.searchParams.set("order","volume_desc");
-  url.searchParams.set("per_page",String(limit));
-  url.searchParams.set("page","1");
-  url.searchParams.set("sparkline","false");
-  const headers=key?{"x-cg-demo-api-key":key}:{};
-  const response=await fetch(url,{headers});
-  if(!response.ok)throw new Error("COINGECKO_"+response.status);
-  const coins=await response.json();
+export async function discoverAndScanMarket(limit=30){
+  const max= Math.min(30,Math.max(1,Number(limit)||30));
+  const [cmcRes,geckoRes]=await Promise.allSettled([
+    getListings(Math.max(100,max*5)),
+    (async()=>{
+      const url=new URL("https://api.coingecko.com/api/v3/coins/markets");
+      url.searchParams.set("vs_currency","usd");
+      url.searchParams.set("order","market_cap_desc");
+      url.searchParams.set("per_page",String(Math.max(100,max*5)));
+      url.searchParams.set("page","1");
+      url.searchParams.set("sparkline","false");
+      const key=process.env.COINGECKO_API_KEY;
+      const response=await fetch(url,{headers:key?{"x-cg-demo-api-key":key}:{}});
+      if(!response.ok)throw new Error("COINGECKO_"+response.status);
+      return response.json();
+    })()
+  ]);
+  const cmc=cmcRes.status==="fulfilled"?cmcRes.value.map(normalizeCmcAsset):[];
+  const gecko=geckoRes.status==="fulfilled"?geckoRes.value:[];
+  const cgMap=new Map(gecko.map(x=>[String(x.symbol||"").toUpperCase()+":"+String(x.name||"").toLowerCase(),x]));
+  const cmcBySymbol=new Map(cmc.filter(x=>x.symbol).map(x=>[x.symbol,x]));
+  const major=["BTC","ETH","BNB","SOL","XRP","ADA","DOGE","AVAX","LINK","TRX","TON","DOT","MATIC","POL","LTC","BCH","ATOM","UNI","AAVE","NEAR"];
+  const candidates=new Map();
+  for(const a of cmc){
+    if(!a.symbol)continue;
+    const key=a.symbol+":"+String(a.name||"").toLowerCase();
+    const cg=cgMap.get(key)||gecko.find(g=>String(g.symbol||"").toUpperCase()===a.symbol)||null;
+    const priority=major.includes(a.symbol)?1000:(a.rank>0?Math.max(0,500-a.rank):0);
+    const address=cg?.platforms?.ethereum||cg?.platforms?.["arbitrum-one"]||cg?.platforms?.base||cg?.platforms?.["polygon-pos"]||a.platform?.token_address||null;
+    const chain=cg?.platforms?.ethereum?"ethereum":cg?.platforms?.base?"base":cg?.platforms?.["arbitrum-one"]?"arbitrum":cg?.platforms?.["polygon-pos"]?"polygon":null;
+    if(address&&chain)candidates.set(key,{address,chain,cmcAsset:a,cgAsset:cg,priority});
+  }
+  for(const g of gecko){
+    const sym=String(g.symbol||"").toUpperCase();
+    if(!sym)continue;
+    const cmcAsset=cmcBySymbol.get(sym)||null;
+    const address=g.platforms?.ethereum||g.platforms?.["arbitrum-one"]||g.platforms?.base||g.platforms?.["polygon-pos"]||null;
+    const chain=g.platforms?.ethereum?"ethereum":g.platforms?.base?"base":g.platforms?.["arbitrum-one"]?"arbitrum":g.platforms?.["polygon-pos"]?"polygon":null;
+    if(address&&chain){
+      const key=sym+":"+String(g.name||"").toLowerCase();
+      const priority=major.includes(sym)?1000:(Number(g.market_cap_rank)>0?Math.max(0,500-Number(g.market_cap_rank)):0);
+      if(!candidates.has(key))candidates.set(key,{address,chain,cmcAsset, cgAsset:g,priority});
+    }
+  }
+  const list=[...candidates.values()].sort((a,b)=>b.priority-a.priority).slice(0,max);
   const results=[];
-  for(const coin of coins){
-    const address=coin.platforms?.ethereum||coin.platforms?.["arbitrum-one"]||coin.platforms?.base||coin.platforms?.["polygon-pos"];
-    if(!address)continue;
+  for(const candidate of list){
     try{
-      const result=await scanToken({chain:coin.platforms?.ethereum?"ethereum":coin.platforms?.base?"base":coin.platforms?.["arbitrum-one"]?"arbitrum":"polygon",address});
-      results.push({...result,symbol:coin.symbol?.toUpperCase(),name:coin.name,coingeckoId:coin.id,priceChange24h:coin.price_change_percentage_24h});
-    }catch(error){results.push({ok:false,symbol:coin.symbol?.toUpperCase(),name:coin.name,error:error.message||"SCAN_ERROR"});}
+      const result=await scanToken({chain:candidate.chain,address:candidate.address});
+      result.marketDiscovery={
+        cmc:candidate.cmcAsset,
+        coingecko:candidate.cgAsset?{
+          id:candidate.cgAsset.id,
+          marketCapRank:candidate.cgAsset.market_cap_rank,
+          marketCapUsd:candidate.cgAsset.market_cap,
+          priceUsd:candidate.cgAsset.current_price,
+          volume24hUsd:candidate.cgAsset.total_volume,
+          change24h:candidate.cgAsset.price_change_percentage_24h
+        }:null,
+        fusionScore:rankFusion(candidate.cmcAsset,candidate.cgAsset,result.market?.usdtPairCount||0),
+        usdtPriority:Boolean((result.market?.usdtPairCount||0)>0||major.includes(candidate.cmcAsset?.symbol||String(candidate.cgAsset?.symbol||"").toUpperCase()))
+      };
+      result.symbol=candidate.cmcAsset?.symbol||String(candidate.cgAsset?.symbol||"").toUpperCase();
+      result.name=candidate.cmcAsset?.name||candidate.cgAsset?.name||null;
+      results.push(result);
+    }catch(error){
+      results.push({ok:false,symbol:candidate.cmcAsset?.symbol||String(candidate.cgAsset?.symbol||"").toUpperCase(),name:candidate.cmcAsset?.name||candidate.cgAsset?.name||null,error:error.message||"SCAN_ERROR"});
+    }
   }
   for(const result of results){if(result.ok)result.confidence=buildConfidence(result);}
-  results.sort((a,b)=>(b.confidence?.confidence||0)-(a.confidence?.confidence||0));
-  return {ok:true,timestamp:new Date().toISOString(),count:results.length,results};
+  results.sort((a,b)=>(b.marketDiscovery?.fusionScore||0)-(a.marketDiscovery?.fusionScore||0)||(b.confidence?.confidence||0)-(a.confidence?.confidence||0));
+  return {
+    ok:true,
+    timestamp:new Date().toISOString(),
+    count:results.length,
+    universe:{requested:max,cmcAvailable:cmc.length>0,coingeckoAvailable:gecko.length>0,majorAssetWatchlist:major,usdtFirst:true},
+    results
+  };
 }
