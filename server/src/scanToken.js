@@ -167,10 +167,11 @@ export async function scanToken({chain,address,cmcId=null}){
 export async function discoverAndScanMarket(limit=100){
   const deepMax=Math.min(100,Math.max(1,Number(limit)||100));
   const surveillanceTop=500;
+  const discoveryUniverse=5000;
   const rotationBatch=Math.min(100,Math.max(1,Number(process.env.TOP500_DEEP_SCAN_BATCH||100)));
   const rotationOffset=Math.floor(Date.now()/3600000)%Math.max(1,Math.ceil(surveillanceTop/rotationBatch));
   const [cmcRes,geckoRes]=await Promise.allSettled([
-    getListings(surveillanceTop),
+    getListings(discoveryUniverse),
     (async()=>{
       const key=process.env.COINGECKO_API_KEY;
       const headers=key?{"x-cg-demo-api-key":key}:{};
@@ -234,9 +235,12 @@ export async function discoverAndScanMarket(limit=100){
     };
   }).filter(Boolean);
   const allCandidates=[...candidates.values()].sort((a,b)=>b.priority-a.priority);
-  const top500=allCandidates.slice(0,surveillanceTop);
+  const top500=allCandidates.filter(x=>Number(x.cmcAsset?.rank||x.cgAsset?.market_cap_rank||999999)<=surveillanceTop).slice(0,surveillanceTop);
+  const outsideTop500=allCandidates.filter(x=>Number(x.cmcAsset?.rank||x.cgAsset?.market_cap_rank||999999)>surveillanceTop);
   const prioritySet=top500.slice(0,deepMax);
   const rotatedSet=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
+  const discoveryOffset=Math.floor(Date.now()/86400000)%Math.max(1,Math.ceil(Math.max(1,outsideTop500.length)/20));
+  const outsideDiscovery=outsideTop500.slice(discoveryOffset*20,discoveryOffset*20+20);
   const scoredTop500=top500.map(x=>{
     const a=x.cmcAsset||{};
     const g=x.cgAsset||{};
@@ -253,7 +257,7 @@ export async function discoverAndScanMarket(limit=100){
   }).sort((a,b)=>b.scanPriority-a.scanPriority);
   const prioritySet2=scoredTop500.slice(0,deepMax);
   const rotatedSet2=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
-  const list=[...new Map([...prioritySet2,...rotatedSet2].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()];
+  const list=[...new Map([...prioritySet2,...rotatedSet2,...outsideDiscovery].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()];
   const results=[];
   for(const candidate of list){
     try{
@@ -288,13 +292,17 @@ export async function discoverAndScanMarket(limit=100){
     universe:{
       requestedDeepScans:deepMax,
       surveillanceUniverseSize:Math.min(surveillanceTop,allCandidates.length),
+      discoveryUniverseSize:allCandidates.length,
+      outsideTop500Discoverable:outsideTop500.length,
       surveillanceUniverse:"TOP_500_BY_MARKET_CAP_CROSS_CHECKED",
       cmcAvailable:cmc.length>0,
       coingeckoAvailable:gecko.length>0,
       majorAssetWatchlist:major,
       majorMarketWatch,
       usdtFirst:true,
-      coverageModel:"TOP500_PRIORITY_PLUS_ROTATING_DEEP_SCAN_PLUS_FULL_MARKET_DISCOVERY",
+      coverageModel:"TOP500_PRIORITY_PLUS_ROTATING_DEEP_SCAN_PLUS_OUTSIDE_TOP500_ROTATING_DISCOVERY",
+      discoveryBatchSize:outsideDiscovery.length,
+      discoveryBatchIndex:discoveryOffset,
       rotation:{batchSize:rotationBatch,batchIndex:rotationOffset,deepScannedCount:list.length}
     },
     results
