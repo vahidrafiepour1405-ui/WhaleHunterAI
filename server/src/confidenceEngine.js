@@ -40,7 +40,8 @@ export function buildConfidence(scan){
   raw-=contradictions.length*7;
   const coverage=active.length?active.reduce((s,x)=>s+x.evidence,0)/Math.max(1,sources.reduce((s,x)=>s+(x.configured?1:0),0)*1):0;
   const agreementBonus=independentSourceCount>=3?8:independentSourceCount>=2?4:0;
-  const confidence=clamp(Math.round(raw+agreementBonus));
+  const sourceCap=independentSourceCount>=4?100:independentSourceCount===3?85:independentSourceCount===2?70:independentSourceCount===1?55:30;
+  const confidence=clamp(Math.min(sourceCap,Math.round(raw+agreementBonus)));
   const dataCompleteness=clamp(Math.round((active.length/Math.max(1,sources.length))*100));
   const calibrated=Boolean(scan.validation?.backtest?.sampleSize>=100);
   return {
