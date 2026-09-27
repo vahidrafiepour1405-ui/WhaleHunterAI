@@ -6,6 +6,7 @@ import {getWalletTokenBuys,aggregateWalletBuys} from "./dexTradeProvider.js";
 import {buildConfidence} from "./confidenceEngine.js";
 import {getNansenHolders,getNansenWhoBoughtSold,getNansenFlowIntelligence,normalizeNansenHolder,normalizeNansenBuyer,summarizeNansenFlow} from "./nansenProvider.js";
 import {analyzeTokenStructure} from "./tokenAnalysisEngine.js";
+import {getListings,normalizeCmcAsset,getMarketPairs,rankFusion} from "./coinMarketCapProvider.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -15,9 +16,19 @@ function classifyPair(p){
   const txns=p.txns||{};
   const buys=Number(txns.buys||0);
   const sells=Number(txns.sells||0);
+  const baseSymbol=String(p.baseToken?.symbol||"").toUpperCase();
+  const quoteSymbol=String(p.quoteToken?.symbol||"").toUpperCase();
+  const stableQuote=["USDT","USDC","DAI","FDUSD","USDP","TUSD","USD"].includes(quoteSymbol);
+  const usdtQuote=quoteSymbol==="USDT";
+  const pairPreferenceScore=(usdtQuote?40:stableQuote?25:0)+(Number(p.liquidity?.usd||0)>100000?15:0)+(Number(p.volume?.h24||0)>100000?15:0);
   return {
     dex:p.dexId||"unknown",
     pairAddress:p.pairAddress,
+    baseSymbol,
+    quoteSymbol,
+    stableQuote,
+    usdtQuote,
+    pairPreferenceScore,
     priceUsd:p.priceUsd?Number(p.priceUsd):null,
     liquidityUsd:Number(p.liquidity?.usd||0),
     volume24hUsd:Number(p.volume?.h24||0),
@@ -31,7 +42,7 @@ export async function scanToken({chain,address}){
   if(!addressLooksLike(address))throw new Error("INVALID_ADDRESS");
   const normalized=normalizeChain(chain);
   const pairs=await getDexPairs(normalized,address);
-  const pairData=pairs.map(classifyPair).sort((a,b)=>b.volume24hUsd-a.volume24hUsd);
+  const pairData=pairs.map(classifyPair).sort((a,b)=>b.pairPreferenceScore-a.pairPreferenceScore||b.volume24hUsd-a.volume24hUsd);
   const best=pairData[0]||null;
 
   const cexHints=[];
@@ -103,7 +114,7 @@ export async function scanToken({chain,address}){
       nansenError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
-    market:{bestPair:best,pairs:pairData.slice(0,20)},
+    market:{bestPair:best,pairs:pairData.slice(0,20),usdtPairCount:pairData.filter(x=>x.usdtQuote).length,stableQuotePairCount:pairData.filter(x=>x.stableQuote).length},
     nansen:{holders:nansenHolders.slice(0,100),buyers24h:nansenBuyers.slice(0,100),flow1d:nansenFlow1d,flow7d:nansenFlow7d},
     whale:{status:holders.length||nansenHolders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,internalHolderTransfers24h,cexHintCount:0},
