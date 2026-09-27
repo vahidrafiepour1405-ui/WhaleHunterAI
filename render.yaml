@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: whale-hunter-ai-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: ALCHEMY_API_KEY
+        sync: false
+      - key: COINGECKO_API_KEY
+        sync: false
+      - key: MIN_WHALE_USD
+        value: "100000"
