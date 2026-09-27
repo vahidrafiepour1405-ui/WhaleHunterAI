@@ -37,6 +37,8 @@ export function normalizeCmcAsset(x){
     change24h:Number(q.percent_change_24h||0),
     change7d:Number(q.percent_change_7d||0),
     platform:x.platform||null,
+    platformTokenAddress:x.platform?.token_address||null,
+    platformName:x.platform?.name||null,
     dateAdded:x.date_added||null
   };
 }
