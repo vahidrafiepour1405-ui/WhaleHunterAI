@@ -27,7 +27,9 @@ export function buildMasterSignal(scan){
   if(acc7.length>=3)confirmations.push("MULTIPLE_WHALES_NET_INFLOW_7D");
   if(independent.length>=10)confirmations.push("BROAD_INDEPENDENT_HOLDER_BASE");
   if(liquidity>=100000)confirmations.push("HEALTHY_LIQUIDITY");
-  if((scan.confidence?.independentSourceCount||0)>=3)confirmations.push("MULTI_SOURCE_CONFIRMATION");
+  if((scan.confidence?.independentSourceCount||0)>=3)confirmations.push("MULTI_ONCHAIN_SOURCE_CONFIRMATION");
+  if(Number(scan.market?.usdtPairCount||0)>0)confirmations.push("USDT_PAIR_LIQUIDITY_PATH");
+  if(Number(scan.market?.cmc?.spotUsdtPairs||0)>0)confirmations.push("CMC_SPOT_USDT_CONFIRMATION");
   let state="INSUFFICIENT_EVIDENCE";
   if(confidence>=80&&confirmedBuys.length>=2&&confirmations.length>=4&&risks.length<=1)state="STRONG_EVIDENCE";
   else if(confidence>=60&&confirmedBuys.length>=1&&confirmations.length>=2&&risks.length<=2)state="WATCH";
