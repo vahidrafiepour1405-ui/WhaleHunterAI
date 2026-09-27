@@ -5,6 +5,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.graphics.Color;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.Window;
 public class MainActivity extends Activity {
  @Override public void onCreate(Bundle b){
@@ -25,7 +27,7 @@ public class MainActivity extends Activity {
   s.setBuiltInZoomControls(false);
   s.setDisplayZoomControls(false);
   w.setBackgroundColor(Color.rgb(5,8,20));
-  w.setWebViewClient(new WebViewClient());
+  w.setWebViewClient(new WebViewClient(){ @Override public boolean shouldOverrideUrlLoading(WebView view,String url){ if(url.startsWith("https://")||url.startsWith("http://")){ try{ startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); return true; }catch(Exception e){} } return false; }});
   w.loadUrl("file:///android_asset/index.html");
  }
 }
