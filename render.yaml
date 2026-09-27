@@ -12,6 +12,10 @@ services:
         sync: false
       - key: COINGECKO_API_KEY
         sync: false
+      - key: CMC_API_KEY
+        sync: false
+      - key: CMC_API_BASE_URL
+        value: "https://pro-api.coinmarketcap.com"
       - key: MIN_WHALE_USD
         value: "100000"
       - key: BITQUERY_API_KEY
