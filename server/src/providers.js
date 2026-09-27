@@ -17,7 +17,7 @@ export function normalizeChain(chain){
 export function providerStatus(){
   return {
     dexScreener:true,
-    holderDiscovery:Boolean(process.env.HOLDER_PROVIDER_API_KEY),
-    addressLabels:Boolean(process.env.ADDRESS_LABEL_PROVIDER_API_KEY)
+    holderDiscovery:Boolean(process.env.BITQUERY_API_KEY),
+    addressLabels:Boolean(process.env.BITQUERY_API_KEY)
   };
 }
