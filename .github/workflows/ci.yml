@@ -26,3 +26,5 @@ jobs:
       - run: node --check src/addressClassifier.js
       - run: node --check src/masterSignal.js
       - run: node --check src/confidenceEngine.js
+      - run: node --check src/technicalProvider.js
+      - run: node --check src/tokenAnalysisEngine.js
