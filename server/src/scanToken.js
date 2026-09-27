@@ -7,6 +7,7 @@ import {buildConfidence} from "./confidenceEngine.js";
 import {getNansenHolders,getNansenWhoBoughtSold,getNansenFlowIntelligence,normalizeNansenHolder,normalizeNansenBuyer,summarizeNansenFlow} from "./nansenProvider.js";
 import {analyzeTokenStructure} from "./tokenAnalysisEngine.js";
 import {getListings,normalizeCmcAsset,getMarketPairs,rankFusion} from "./coinMarketCapProvider.js";
+import {analyzeTechnical} from "./technicalProvider.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -45,6 +46,8 @@ export async function scanToken({chain,address,cmcId=null}){
   const pairData=pairs.map(classifyPair).sort((a,b)=>b.pairPreferenceScore-a.pairPreferenceScore||b.volume24hUsd-a.volume24hUsd);
   const best=pairData[0]||null;
   let cmcMarketPairs=null; let cmcMarketError=null;
+  let technical=null; let technicalError=null;
+  if(best?.pairAddress){try{technical=await analyzeTechnical({chain:normalized,pairAddress:best.pairAddress});}catch(error){technicalError=error.message||"TECHNICAL_ERROR";}}
   if(cmcId&&process.env.CMC_API_KEY){try{cmcMarketPairs=await getMarketPairs(cmcId);}catch(error){cmcMarketError=error.message||"CMC_MARKET_ERROR";}}
 
   const cexHints=[];
@@ -121,6 +124,7 @@ export async function scanToken({chain,address,cmcId=null}){
       nansenFlow1d,
       nansenFlow7d,
       nansenError,
+      technicalError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
     market:{
@@ -139,6 +143,8 @@ export async function scanToken({chain,address,cmcId=null}){
       nansenWhaleNetFlow24hUsd:Number(nansenFlow1d?.whaleNetFlowUsd||0),
       nansenWhaleNetFlow7dUsd:Number(nansenFlow7d?.whaleNetFlowUsd||0),
       nansenBuyerCount24h:nansenBuyers.length,
+      technicalScore:Number(technical?.score||0),
+      technicalState:technical?.state||"UNAVAILABLE",
       crossSourceWhaleFlowAgreement:
         (nansenFlow1d && realAccum24.length>0)
           ? Math.sign(Number(nansenFlow1d.whaleNetFlowUsd||0))===Math.sign(realAccum24.reduce((s,x)=>s+Number(x.netFlow||0),0))
