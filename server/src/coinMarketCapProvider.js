@@ -20,8 +20,8 @@ export async function getQuotesByIds(ids){
   return get(path,{id:ids.slice(0,250).join(","),convert:"USD"});
 }
 export async function getMarketPairs(id){
-  const path=process.env.CMC_API_KEY?"/v2/cryptocurrency/market-pairs/latest":"/public-api/v2/cryptocurrency/market-pairs/latest";
-  return get(path,{id,convert:"USD",limit:100});
+  if(!process.env.CMC_API_KEY)throw new Error("CMC_MARKET_PAIRS_REQUIRES_KEY");
+  return get("/v2/cryptocurrency/market-pairs/latest",{id,convert:"USD",limit:100});
 }
 export function normalizeCmcAsset(x){
   const q=x.quote?.USD||{};
