@@ -18,3 +18,5 @@ services:
         sync: false
       - key: BITQUERY_GRAPHQL_URL
         value: "https://graphql.bitquery.io"
+      - key: BITQUERY_LABELS_GRAPHQL_URL
+        value: "https://streaming.bitquery.io/graphql"
