@@ -38,12 +38,14 @@ function classifyPair(p){
   };
 }
 
-export async function scanToken({chain,address}){
+export async function scanToken({chain,address,cmcId=null}){
   if(!addressLooksLike(address))throw new Error("INVALID_ADDRESS");
   const normalized=normalizeChain(chain);
   const pairs=await getDexPairs(normalized,address);
   const pairData=pairs.map(classifyPair).sort((a,b)=>b.pairPreferenceScore-a.pairPreferenceScore||b.volume24hUsd-a.volume24hUsd);
   const best=pairData[0]||null;
+  let cmcMarketPairs=null; let cmcMarketError=null;
+  if(cmcId&&process.env.CMC_API_KEY){try{cmcMarketPairs=await getMarketPairs(cmcId);}catch(error){cmcMarketError=error.message||"CMC_MARKET_ERROR";}}
 
   const cexHints=[];
   const confirmedDexBuys=pairData.filter(x=>x.confirmedDexSpotBuyActivity).length;
@@ -114,7 +116,13 @@ export async function scanToken({chain,address}){
       nansenError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
-    market:{bestPair:best,pairs:pairData.slice(0,20),usdtPairCount:pairData.filter(x=>x.usdtQuote).length,stableQuotePairCount:pairData.filter(x=>x.stableQuote).length},
+    market:{
+      bestPair:best,
+      pairs:pairData.slice(0,20),
+      usdtPairCount:pairData.filter(x=>x.usdtQuote).length,
+      stableQuotePairCount:pairData.filter(x=>x.stableQuote).length,
+      cmc:{marketPairCount:Number(cmcMarketPairs?.num_market_pairs||0),usdtPairs:Array.isArray(cmcMarketPairs?.market_pairs)?cmcMarketPairs.market_pairs.filter(x=>String(x.market_pair_quote?.currency_symbol||"").toUpperCase()==="USDT").length:null,spotUsdtPairs:Array.isArray(cmcMarketPairs?.market_pairs)?cmcMarketPairs.market_pairs.filter(x=>String(x.market_pair_quote?.currency_symbol||"").toUpperCase()==="USDT"&&String(x.category||"").toLowerCase()==="spot").length:null,error:cmcMarketError}
+    },
     nansen:{holders:nansenHolders.slice(0,100),buyers24h:nansenBuyers.slice(0,100),flow1d:nansenFlow1d,flow7d:nansenFlow7d},
     whale:{status:holders.length||nansenHolders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,internalHolderTransfers24h,cexHintCount:0},
