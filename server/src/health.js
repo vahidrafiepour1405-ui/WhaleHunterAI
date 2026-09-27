@@ -7,7 +7,7 @@ export function health(){
     providers:{
       alchemy:Boolean(process.env.ALCHEMY_API_KEY),
       coingecko:Boolean(process.env.COINGECKO_API_KEY),
-      dexscreener:true
+      dexscreener:true,bitquery:Boolean(process.env.BITQUERY_API_KEY),nansen:Boolean(process.env.NANSEN_API_KEY),coinmarketcap:Boolean(process.env.CMC_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)
     }
   };
 }
