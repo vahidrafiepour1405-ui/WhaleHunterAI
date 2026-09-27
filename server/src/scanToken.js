@@ -61,8 +61,11 @@ export async function scanToken({chain,address,cmcId=null}){
   const pairAddresses=pairData.map(x=>x.pairAddress).filter(Boolean);
   let labelRows=[];  if(holders.length&&process.env.BITQUERY_API_KEY){try{labelRows=await getAddressLabels(holders.map(h=>h.Holder?.Address),normalized);}catch(error){holderError=holderError||error.message||"ADDRESS_LABEL_ERROR";}}  const labelMap=new Map();  for(const row of labelRows){const key=String(row.Address||"").toLowerCase();if(!labelMap.has(key))labelMap.set(key,[]);labelMap.get(key).push(row);}  const classified=holders.map(h=>{const holderAddress=h.Holder?.Address;const labels=labelMap.get(String(holderAddress||"").toLowerCase())||[];const labelExcluded=labels.some(isNonIndependentLabel);return {...h,address:holderAddress,labels:labels.map(x=>x.Label),classify:labelExcluded?{excluded:true,reason:"LABELED_NON_INDEPENDENT"}:classifyAddress(holderAddress,{tokenAddress:address,pairAddresses})};});
   const activeHolders=classified.filter(x=>!x.classify.excluded);
-  const accum24=rankAccumulation(activeHolders,flows24);
-  const accum7=rankAccumulation(activeHolders,flows7);
+  const minWhaleUsd=Math.max(0,Number(process.env.MIN_WHALE_USD||100000));
+  const whaleHolders=activeHolders.filter(x=>Number(x.Balance?.AmountInUSD||0)>=minWhaleUsd);
+  const whaleAnalysisHolders=whaleHolders.length?whaleHolders:activeHolders.filter(x=>Number(x.Balance?.AmountInUSD||0)>0).slice(0,100);
+  const accum24=rankAccumulation(whaleAnalysisHolders,flows24);
+  const accum7=rankAccumulation(whaleAnalysisHolders,flows7);
   const realAccum24=accum24.filter(x=>x.netFlow>0);
   const realAccum7=accum7.filter(x=>x.netFlow>0);
   const activeSet=new Set(activeHolders.map(x=>String(x.address||"").toLowerCase()).filter(Boolean));
@@ -105,7 +108,10 @@ export async function scanToken({chain,address,cmcId=null}){
       transferHistoryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       providers:{...providerStatus(),coingecko:Boolean(process.env.COINGECKO_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)},
-      holderRows:holders.length,      labeledRows:labelRows.length,
+      holderRows:holders.length,
+      qualifiedWhaleRows:whaleAnalysisHolders.length,
+      minWhaleUsd,
+      labeledRows:labelRows.length,
       whaleDexBuyRows:confirmedWhaleBuys24.length,
       tradeError,
       holderError,
@@ -124,7 +130,7 @@ export async function scanToken({chain,address,cmcId=null}){
       cmc:{marketPairCount:Number(cmcMarketPairs?.num_market_pairs||0),usdtPairs:Array.isArray(cmcMarketPairs?.market_pairs)?cmcMarketPairs.market_pairs.filter(x=>String(x.market_pair_quote?.currency_symbol||"").toUpperCase()==="USDT").length:null,spotUsdtPairs:Array.isArray(cmcMarketPairs?.market_pairs)?cmcMarketPairs.market_pairs.filter(x=>String(x.market_pair_quote?.currency_symbol||"").toUpperCase()==="USDT"&&String(x.category||"").toLowerCase()==="spot").length:null,error:cmcMarketError}
     },
     nansen:{holders:nansenHolders.slice(0,100),buyers24h:nansenBuyers.slice(0,100),flow1d:nansenFlow1d,flow7d:nansenFlow7d},
-    whale:{status:holders.length||nansenHolders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
+    whale:{status:holders.length||nansenHolders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",minWhaleUsd,qualifiedWhaleCount:whaleAnalysisHolders.length,independentWhales:whaleAnalysisHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,internalHolderTransfers24h,cexHintCount:0},
     evidence:{
       score:evidence,
