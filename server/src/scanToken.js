@@ -172,18 +172,21 @@ export async function discoverAndScanMarket(limit=100){
   const [cmcRes,geckoRes]=await Promise.allSettled([
     getListings(surveillanceTop),
     (async()=>{
-      const url=new URL("https://api.coingecko.com/api/v3/coins/markets");
-      url.searchParams.set("vs_currency","usd");
-      url.searchParams.set("order","market_cap_desc");
-      url.searchParams.set("per_page",String(surveillanceTop));
-      url.searchParams.set("page","1");
-      url.searchParams.set("sparkline","false");
       const key=process.env.COINGECKO_API_KEY;
-      const response=await fetch(url,{headers:key?{"x-cg-demo-api-key":key}:{}});
-      if(!response.ok)throw new Error("COINGECKO_"+response.status);
-      return response.json();
-    })()
-  ]);
+      const headers=key?{"x-cg-demo-api-key":key}:{};
+      const pages=await Promise.all([1,2].map(async page=>{
+        const url=new URL("https://api.coingecko.com/api/v3/coins/markets");
+        url.searchParams.set("vs_currency","usd");
+        url.searchParams.set("order","market_cap_desc");
+        url.searchParams.set("per_page","250");
+        url.searchParams.set("page",String(page));
+        url.searchParams.set("sparkline","false");
+        const response=await fetch(url,{headers});
+        if(!response.ok)throw new Error("COINGECKO_"+response.status);
+        return response.json();
+      }));
+      return pages.flat().slice(0,surveillanceTop);
+    })()  ]);
   const cmc=cmcRes.status==="fulfilled"?cmcRes.value.map(normalizeCmcAsset):[];
   const gecko=geckoRes.status==="fulfilled"?geckoRes.value:[];
   const cgMap=new Map(gecko.map(x=>[String(x.id||"").toLowerCase(),x]));
