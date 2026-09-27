@@ -18,6 +18,8 @@ export function providerStatus(){
   return {
     dexScreener:true,
     holderDiscovery:Boolean(process.env.BITQUERY_API_KEY),
-    addressLabels:Boolean(process.env.BITQUERY_API_KEY)
+    addressLabels:Boolean(process.env.BITQUERY_API_KEY),
+    nansen:Boolean(process.env.NANSEN_API_KEY),
+    walletDexTrades:Boolean(process.env.BITQUERY_API_KEY)
   };
 }
