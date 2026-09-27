@@ -8,7 +8,7 @@
 </style>
 </head>
 <body>
-<div class="updateBox"><button class="updateBtn" id="appUpdateBtn">🔄 بررسی آخرین نسخه</button><div class="updateHint" id="updateHint">نسخه فعلی 11.0</div></div>
+<div class="updateBox"><button class="updateBtn" id="appUpdateBtn">🔄 بررسی آخرین نسخه</button><div class="updateHint" id="updateHint">نسخه فعلی 13.0</div></div>
 <main class="app">
 <header class="top"><div><div class="brand">🐋 WHALE HUNTER AI</div><div class="sub">MULTI-AGENT • MARKET • WHALE PORTFOLIO • ANALYTICS</div></div><div><div class="live">● LIVE DATA</div><div style="margin-top:5px;font-size:8px;color:#c9a7ff;text-align:center;font-weight:900">PRO EDITION</div></div></header>
 <nav class="tabs">
@@ -42,14 +42,14 @@
 <section id="analytics" class="view">
 <div class="card hero"><h2>🧭 سایت‌های تحلیلی</h2><p class="muted">این بخش دوباره داخل اپ قرار گرفت. برای هر ارز می‌توانی از سایت‌های تحلیلی اصلی استفاده کنی.</p>
 <div class="linkGrid">
-<a class="linkBtn" href="https://www.tradingview.com/markets/cryptocurrencies/" target="_blank">📈 TradingView</a>
-<a class="linkBtn" href="https://dexscreener.com/" target="_blank">💱 DEX Screener</a>
-<a class="linkBtn" href="https://www.coingecko.com/" target="_blank">🦎 CoinGecko</a>
-<a class="linkBtn" href="https://coinmarketcap.com/" target="_blank">🪙 CoinMarketCap</a>
-<a class="linkBtn" href="https://www.geckoterminal.com/" target="_blank">📊 GeckoTerminal</a>
-<a class="linkBtn" href="https://defillama.com/" target="_blank">🌊 DeFiLlama</a>
-<a class="linkBtn" href="https://platform.arkhamintelligence.com/" target="_blank">🕵️ Arkham</a>
-<a class="linkBtn" href="https://etherscan.io/" target="_blank">🔍 Etherscan</a>
+<a class="linkBtn" href="https://www.tradingview.com/markets/cryptocurrencies/" target="_self">📈 TradingView</a>
+<a class="linkBtn" href="https://dexscreener.com/" target="_self">💱 DEX Screener</a>
+<a class="linkBtn" href="https://www.coingecko.com/" target="_self">🦎 CoinGecko</a>
+<a class="linkBtn" href="https://coinmarketcap.com/" target="_self">🪙 CoinMarketCap</a>
+<a class="linkBtn" href="https://www.geckoterminal.com/" target="_self">📊 GeckoTerminal</a>
+<a class="linkBtn" href="https://defillama.com/" target="_self">🌊 DeFiLlama</a>
+<a class="linkBtn" href="https://platform.arkhamintelligence.com/" target="_self">🕵️ Arkham</a>
+<a class="linkBtn" href="https://etherscan.io/" target="_self">🔍 Etherscan</a>
 </div></div>
 <div class="card"><h3>🔗 لینک تحلیل مستقیم ارز</h3><input id="siteCoin" class="input" placeholder="BTC / ETH / SOL / contract"><button id="siteOpen" class="btn" style="margin-top:8px">باز کردن ابزارهای تحلیل</button><div id="siteStatus" class="status"></div></div>
 </section>
@@ -107,7 +107,25 @@ function calcScore(t,h){let s=0;if(t.buys>t.sells)s+=22;if(t.buys>=t.sells*1.5&&
 async function getHolders(t){if(!CHAINS[t.chain]||!t.address)return{list:[],count:0,top1:0,top5:0};try{const j=await json(CHAINS[t.chain]+"/tokens/"+encodeURIComponent(t.address)+"/holders?items_count=50");const a=Array.isArray(j.items)?j.items:[],v=a.map(x=>num(x.value)),total=v.reduce((s,x)=>s+x,0);return{list:a,count:a.length,top1:total?v[0]/total*100:0,top5:total?v.slice(0,5).reduce((s,x)=>s+x,0)/total*100:0}}catch(e){return{list:[],count:0,top1:0,top5:0}}}
 async function analyzeToken(t){const h=await getHolders(t),score=calcScore(t,h),s=save(t,score);return{...t,...h,score,s}}
 function renderResult(t){const label=t.buys>t.sells&&t.top1<35?"ACCUMULATION WATCH":t.sells>t.buys?"DISTRIBUTION WATCH":"NEEDS CONFIRMATION",cl=label[0]==="A"?"":label[0]==="D"?"red":"warn";return '<div class="card" style="margin:7px 0;padding:12px"><div class="row"><span class="coin">'+esc(t.symbol)+'</span><span class="pill '+cl+'">'+label+'</span></div><div class="small">'+esc(t.chain||"multi")+' • '+short(t.address||"")+'</div><div class="bar"><i style="width:'+t.score+'%"></i></div><div class="small">Evidence '+t.score+'/100 • Top1 '+pct(t.top1)+'% • Top5 '+pct(t.top5)+'%</div><div class="grid" style="margin-top:7px"><div class="metric"><b>'+money(t.volume)+'</b><span>Volume 24h</span></div><div class="metric"><b>'+money(t.liquidity)+'</b><span>Liquidity</span></div><div class="metric"><b>'+t.buys+'</b><span>Buys</span></div><div class="metric"><b>'+t.sells+'</b><span>Sells</span></div></div></div>'}
-async function scan(){if(!MARKET.length)await loadMarket();const list=filtered().filter(x=>x.address&&CHAINS[x.chain]).slice(0,10),box=document.getElementById("results"),st=document.getElementById("scanStatus"),b=document.getElementById("runScan");b.disabled=true;box.innerHTML="";const rs=[];for(let i=0;i<list.length;i++){st.textContent="Multi-Agent "+(i+1)+"/"+list.length;rs.push(await analyzeToken(list[i]));box.innerHTML=rs.map(renderResult).join("")}document.getElementById("sAnalyzed").textContent=rs.length;document.getElementById("sEvidence").textContent=rs.filter(x=>x.buys>x.sells).length;document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);document.getElementById("sWatch").textContent=rs.filter(x=>x.score>=50).length;st.textContent="اسکن کامل شد • "+rs.length+" دارایی";b.disabled=false}
+async function scan(){
+ if(!MARKET.length)await loadMarket();
+ const list=filtered();
+ const box=document.getElementById("results"),st=document.getElementById("scanStatus"),b=document.getElementById("runScan");
+ b.disabled=true;box.innerHTML='<div class="empty">در حال اسکن کل فهرست بازار…</div>';
+ const rs=[];
+ for(let i=0;i<list.length;i+=8){
+  const batch=list.slice(i,i+8);
+  st.textContent="Multi-Agent "+Math.min(i+batch.length,list.length)+"/"+list.length;
+  const br=await Promise.all(batch.map(x=>analyzeToken(x).catch(e=>({...x,score:0,count:0,top1:0,top5:0,volume:num(x.volume),liquidity:num(x.liquidity),buys:num(x.buys),sells:num(x.sells),scanError:String(e.message||e)}))));
+  rs.push(...br);box.innerHTML=rs.map(renderResult).join("");
+ }
+ document.getElementById("sAnalyzed").textContent=rs.length;
+ document.getElementById("sEvidence").textContent=rs.filter(x=>x.buys>x.sells).length;
+ document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);
+ document.getElementById("sWatch").textContent=rs.filter(x=>x.score>=50).length;
+ st.textContent="اسکن کامل شد • "+rs.length+" دارایی";
+ b.disabled=false;
+}
 
 async function walletBalances(){
  const address=document.getElementById("walletAddress").value.trim(),chain=document.getElementById("walletChain").value,st=document.getElementById("walletStatus"),list=document.getElementById("walletList");if(!/^0x[a-fA-F0-9]{40}$/.test(address)){st.textContent="آدرس EVM معتبر وارد کن";return}
@@ -120,16 +138,40 @@ async function walletBalances(){
 }
 
 function tradeUrl(t){const c=String(t.chain||"").toLowerCase(),a=t.address||"";if(!a)return null;if(c==="solana")return "https://jup.ag/swap?buy="+encodeURIComponent(a)+"&sell=So11111111111111111111111111111111111111112";const m={ethereum:"ethereum",base:"base",arbitrum:"arbitrum",polygon:"polygon",optimism:"optimism"};if(m[c])return "https://app.uniswap.org/swap?chain="+m[c]+"&outputCurrency="+encodeURIComponent(a);if(c==="bsc")return "https://pancakeswap.finance/swap?chain=bsc&outputCurrency="+encodeURIComponent(a);return "https://dexscreener.com/search?q="+encodeURIComponent(a)}
-function analyticalLinks(t){const s=encodeURIComponent(t.symbol||"");const a=encodeURIComponent(t.address||"");return '<div class="linksBox"><h3>🧭 سایت‌های تحلیلی '+esc(t.symbol||"")+'</h3><div class="linkGrid"><a class="linkBtn" href="https://www.tradingview.com/symbols/'+s+'USDT/" target="_blank">TradingView USDT</a><a class="linkBtn" href="https://dexscreener.com/search?q='+a+'" target="_blank">DEX Screener</a><a class="linkBtn" href="https://www.coingecko.com/en/search?query='+s+'" target="_blank">CoinGecko</a><a class="linkBtn" href="https://coinmarketcap.com/search/?q='+s+'" target="_blank">CoinMarketCap</a><a class="linkBtn" href="https://www.geckoterminal.com/search?query='+a+'" target="_blank">GeckoTerminal</a><a class="linkBtn" href="https://defillama.com/search?q='+s+'" target="_blank">DeFiLlama</a><a class="linkBtn" href="https://platform.arkhamintelligence.com/explorer/search/'+a+'" target="_blank">Arkham</a></div></div>'}
+function analyticalLinks(t){const s=encodeURIComponent(t.symbol||"");const a=encodeURIComponent(t.address||"");return '<div class="linksBox"><h3>🧭 سایت‌های تحلیلی '+esc(t.symbol||"")+'</h3><div class="linkGrid"><a class="linkBtn" href="https://www.tradingview.com/symbols/'+s+'USDT/" target="_self">TradingView USDT</a><a class="linkBtn" href="https://dexscreener.com/search?q='+a+'" target="_self">DEX Screener</a><a class="linkBtn" href="https://www.coingecko.com/en/search?query='+s+'" target="_self">CoinGecko</a><a class="linkBtn" href="https://coinmarketcap.com/search/?q='+s+'" target="_self">CoinMarketCap</a><a class="linkBtn" href="https://www.geckoterminal.com/search?query='+a+'" target="_self">GeckoTerminal</a><a class="linkBtn" href="https://defillama.com/search?q='+s+'" target="_self">DeFiLlama</a><a class="linkBtn" href="https://platform.arkhamintelligence.com/explorer/search/'+a+'" target="_self">Arkham</a></div></div>'}
 function chainForGecko(c){return{ethereum:"eth",base:"base",arbitrum:"arbitrum",bsc:"bsc",polygon:"polygon_pos",solana:"solana"}[c]||c}
 const TF_MAP={"1H":["hour",1],"4H":["hour",4],"12H":["hour",12],"1D":["day",1],"1W":["week",1]};let CURRENT_TF="1H";
 async function loadChartTf(t,tf){const host=document.getElementById("chartHost");if(!host||!t.pair)return;CURRENT_TF=tf;try{const s=TF_MAP[tf]||TF_MAP["1H"],u="https://api.geckoterminal.com/api/v2/networks/"+chainForGecko(t.chain)+"/pools/"+encodeURIComponent(t.pair)+"/ohlcv/"+s[0]+"?aggregate="+s[1]+"&limit=100&currency=usd",j=await json(u),rows=j?.data?.attributes?.ohlcv_list||[];if(!rows.length){host.innerHTML='<div class="empty">نمودار برای این تایم‌فریم موجود نیست.</div>';return}const p=rows.slice().reverse(),v=p.map(x=>num(x[4])),W=720,H=220,P=25,min=Math.min(...v),max=Math.max(...v),rg=max-min||1,points=v.map((x,i)=>{const X=P+i*(W-2*P)/Math.max(1,v.length-1),Y=H-P-(x-min)/rg*(H-2*P);return X.toFixed(1)+","+Y.toFixed(1)}).join(" ");host.innerHTML='<div class="chartBox"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none"><polyline fill="none" stroke="#22d3ee" stroke-width="3" points="'+points+'"/></svg><div class="chartLegend">'+esc(tf)+' • '+p.length+' کندل • GeckoTerminal</div></div>'}catch(e){host.innerHTML='<div class="empty">نمودار موقتاً در دسترس نیست.</div>'}}
-function showAsset(t){document.getElementById("modalTitle").textContent="📊 "+(t.symbol||"TOKEN")+" • "+(t.chain||"multi");document.getElementById("modalBody").innerHTML='<p><b>Contract</b><br>'+esc(t.address||"—")+'</p><div id="chartHost"><div class="empty">در حال دریافت نمودار…</div></div><div class="tfbar"><button class="tf" data-tf="1H">1H</button><button class="tf" data-tf="4H">4H</button><button class="tf" data-tf="12H">12H</button><button class="tf" data-tf="1D">1D</button><button class="tf" data-tf="1W">1W</button></div><div class="tradeBox"><button id="tradeNow" class="btn">⚡ معامله این ارز</button><div class="small">اتصال کیف‌پول و تأیید نهایی با خودت است.</div></div>'+analyticalLinks(t)+'<div class="grid"><div class="metric"><b>'+money(t.volume)+'</b><span>حجم 24h</span></div><div class="metric"><b>'+money(t.liquidity)+'</b><span>نقدینگی</span></div><div class="metric"><b>'+num(t.buys)+'</b><span>Buy</span></div><div class="metric"><b>'+num(t.sells)+'</b><span>Sell</span></div></div><p>Evidence: '+(t.score??"—")+'/100 • Top1: '+pct(t.top1)+'% • Top5: '+pct(t.top5)+'%</p>';document.getElementById("modal").style.display="flex";const tu=tradeUrl(t);document.getElementById("tradeNow").onclick=()=>{if(tu)location.href=tu};document.querySelectorAll(".tf").forEach(b=>b.onclick=()=>loadChartTf(t,b.dataset.tf));loadChartTf(t,CURRENT_TF)}
+async function resolvePair(t){
+ if(t.pair&&t.chain&&t.chain!=="multi")return t;
+ try{
+  const q=t.address||t.symbol||"";
+  const j=await json("https://api.dexscreener.com/latest/dex/search?q="+encodeURIComponent(q));
+  const ps=Array.isArray(j?.pairs)?j.pairs:[];
+  const preferred=ps.filter(x=>["solana","ethereum","base","arbitrum","bsc","polygon"].includes(String(x.chainId||"").toLowerCase()));
+  const rows=(preferred.length?preferred:ps).sort((a,b)=>num(b.liquidity?.usd)-num(a.liquidity?.usd));
+  const x=rows[0];
+  if(x)return {...t,chain:String(x.chainId||t.chain||"multi").toLowerCase(),address:x.baseToken?.address||t.address||"",symbol:x.baseToken?.symbol||t.symbol,name:x.baseToken?.name||t.name,price:num(x.priceUsd)||t.price,liquidity:num(x.liquidity?.usd)||t.liquidity,volume:num(x.volume?.h24)||t.volume,buys:num(x.txns?.h24?.buys),sells:num(x.txns?.h24?.sells),p24:num(x.priceChange?.h24),pair:x.pairAddress||"",dex:x.dexId||"unknown",quote:String(x.quoteToken?.symbol||"").toUpperCase(),usdt:String(x.quoteToken?.symbol||"").toUpperCase()==="USDT",usdc:String(x.quoteToken?.symbol||"").toUpperCase()==="USDC"};
+ }catch(e){}
+ return t;
+}
+async function showAsset(t){t=await resolvePair(t);document.getElementById("modalTitle").textContent="📊 "+(t.symbol||"TOKEN")+" • "+(t.chain||"multi");document.getElementById("modalBody").innerHTML='<p><b>Contract</b><br>'+esc(t.address||"—")+'</p><div id="chartHost"><div class="empty">در حال دریافت نمودار…</div></div><div class="tfbar"><button class="tf" data-tf="1H">1H</button><button class="tf" data-tf="4H">4H</button><button class="tf" data-tf="12H">12H</button><button class="tf" data-tf="1D">1D</button><button class="tf" data-tf="1W">1W</button></div><div class="tradeBox"><button id="tradeNow" class="btn">⚡ معامله این ارز</button><div class="small">اتصال کیف‌پول و تأیید نهایی با خودت است.</div></div>'+analyticalLinks(t)+'<div class="grid"><div class="metric"><b>'+money(t.volume)+'</b><span>حجم 24h</span></div><div class="metric"><b>'+money(t.liquidity)+'</b><span>نقدینگی</span></div><div class="metric"><b>'+num(t.buys)+'</b><span>Buy</span></div><div class="metric"><b>'+num(t.sells)+'</b><span>Sell</span></div></div><p>Evidence: '+(t.score??"—")+'/100 • Top1: '+pct(t.top1)+'% • Top5: '+pct(t.top5)+'%</p>';document.getElementById("modal").style.display="flex";const tu=tradeUrl(t);document.getElementById("tradeNow").onclick=()=>{if(tu)location.href=tu};document.querySelectorAll(".tf").forEach(b=>b.onclick=()=>loadChartTf(t,b.dataset.tf));loadChartTf(t,CURRENT_TF)}
 function closeModal(){document.getElementById("modal").style.display="none"}
-function agentInfo(i){document.getElementById("modalTitle").textContent=AGENTS[i][0]+" "+AGENTS[i][1];document.getElementById("modalBody").innerHTML="<p>"+AGENTS[i][2]+"</p><p>این Agent فقط در صورت وجود داده کافی نتیجه را تقویت می‌کند و خروجی آن تضمین رشد قیمت نیست.</p>";document.getElementById("modal").style.display="flex"}
+function agentInfo(i){
+ const a=AGENTS[i];
+ document.getElementById("modalTitle").textContent=a[0]+" "+a[1];
+ document.getElementById("modalBody").innerHTML="<p><b>"+esc(a[1])+"</b></p><p>"+esc(a[2])+"</p><div class='card' style='margin:8px 0'><div class='small'>وضعیت</div><div class='coin'>ACTIVE</div><div class='small'>این Agent بخشی از موتور چندعاملی Whale Hunter AI است و نتیجه آن فقط بر اساس داده قابل مشاهده و شواهد موجود تولید می‌شود.</div></div><button class='btn' onclick='runAgentNow("+i+")'>▶ اجرای Agent روی بازار</button>";
+ document.getElementById("modal").style.display="flex";
+}
+async function runAgentNow(i){
+ closeModal();
+ const tab=document.querySelector('[data-v="scan"]');if(tab)tab.click();
+ const st=document.getElementById("scanStatus");st.textContent="در حال اجرای "+AGENTS[i][1]+" روی کل فهرست…";
+ await scan();
+}
 
 async function direct(){const q=document.getElementById("coinName").value.trim(),st=document.getElementById("directStatus");if(!q){st.textContent="نام یا نماد را وارد کن";return}st.textContent="در حال تطبیق بازار…";try{if(!MARKET.length)await loadMarket();let t=MARKET.find(x=>String(x.symbol).toLowerCase()===q.toLowerCase()||String(x.name).toLowerCase()===q.toLowerCase());if(!t){const j=await json("https://api.dexscreener.com/latest/dex/search?q="+encodeURIComponent(q));const ps=Array.isArray(j?.pairs)?j.pairs:[],p=ps.sort((a,b)=>num(b.liquidity?.usd)-num(a.liquidity?.usd))[0];if(p)t={chain:String(p.chainId||"").toLowerCase(),address:p.baseToken?.address||"",symbol:p.baseToken?.symbol||q,name:p.baseToken?.name||q,price:num(p.priceUsd),liquidity:num(p.liquidity?.usd),volume:num(p.volume?.h24),buys:num(p.txns?.h24?.buys),sells:num(p.txns?.h24?.sells),p24:num(p.priceChange?.h24),dex:p.dexId||"unknown",pair:p.pairAddress||""}}if(!t)throw new Error("ارز پیدا نشد");t=await analyzeToken(t);document.getElementById("results").innerHTML=renderResult(t);showAsset(t);st.textContent="تحلیل کامل شد";}catch(e){st.textContent="خطا: "+e.message}}
-function openSites(){const q=document.getElementById("siteCoin").value.trim();if(!q){document.getElementById("siteStatus").textContent="نماد یا Contract را وارد کن";return}const s=encodeURIComponent(q);document.getElementById("siteStatus").innerHTML='ابزارها آماده‌اند: <a style="color:#67e8f9" target="_blank" href="https://dexscreener.com/search?q='+s+'">DEX Screener</a> • <a style="color:#67e8f9" target="_blank" href="https://coinmarketcap.com/search/?q='+s+'">CMC</a> • <a style="color:#67e8f9" target="_blank" href="https://www.coingecko.com/en/search?query='+s+'">CoinGecko</a>'}
+function openSites(){const q=document.getElementById("siteCoin").value.trim();if(!q){document.getElementById("siteStatus").textContent="نماد یا Contract را وارد کن";return}const s=encodeURIComponent(q);document.getElementById("siteStatus").innerHTML='ابزارها آماده‌اند: <a style="color:#67e8f9" target="_self" href="https://dexscreener.com/search?q='+s+'">DEX Screener</a> • <a style="color:#67e8f9" target="_self" href="https://coinmarketcap.com/search/?q='+s+'">CMC</a> • <a style="color:#67e8f9" target="_self" href="https://www.coingecko.com/en/search?query='+s+'">CoinGecko</a>'}
 async function checkUpdate(){const h=document.getElementById("updateHint");h.textContent="در حال باز کردن آخرین نسخه…";location.href="https://github.com/vahidrafiepour1405-ui/WhaleHunterAI/releases/latest"}
 document.getElementById("loadMarket").onclick=loadMarket;document.getElementById("runScan").onclick=scan;document.getElementById("analyze").onclick=direct;document.getElementById("walletLoad").onclick=walletBalances;document.getElementById("siteOpen").onclick=openSites;document.getElementById("appUpdateBtn").onclick=checkUpdate;["q","chain","quote","sort"].forEach(id=>document.getElementById(id).addEventListener("input",renderMarket));
 </script>
