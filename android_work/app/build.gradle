@@ -1,13 +1,13 @@
 plugins { id 'com.android.application' }
 android {
  namespace 'com.whalehunter.ai'
- compileSdk 35
+ compileSdk 36
  defaultConfig {
   applicationId 'com.whalehunter.ai.final'
   minSdk 23
-  targetSdk 35
-  versionCode 12
-  versionName '12.0'
+  targetSdk 36
+  versionCode 13
+  versionName '13.0'
  }
  buildTypes {
   release {
