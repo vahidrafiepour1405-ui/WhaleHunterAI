@@ -3,6 +3,7 @@ import {getTopHolders,getHolderFlows,rankAccumulation} from "./holderProvider.js
 import {classifyAddress} from "./addressClassifier.js";
 import {getAddressLabels,isNonIndependentLabel} from "./addressLabels.js";
 import {getWalletTokenBuys,aggregateWalletBuys} from "./dexTradeProvider.js";
+import {buildConfidence} from "./confidenceEngine.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -31,7 +32,6 @@ export async function scanToken({chain,address}){
   const pairData=pairs.map(classifyPair).sort((a,b)=>b.volume24hUsd-a.volume24hUsd);
   const best=pairData[0]||null;
 
-  const transfers=[];
   const cexHints=[];
   const confirmedDexBuys=pairData.filter(x=>x.confirmedDexSpotBuyActivity).length;
   let holders=[]; let flows24=[]; let flows7=[]; let holderError=null;
@@ -62,16 +62,16 @@ export async function scanToken({chain,address}){
     (cexHints.length>0?10:0)
   ));
 
-  return {
+  const output={
     ok:true,
     timestamp:new Date().toISOString(),
     chain:normalized,
     address,
     dataQuality:{
       dexPairsFound:pairData.length,
-      transferHistoryConfigured:false,
+      transferHistoryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY),
-      providers:providerStatus(),
+      providers:{...providerStatus(),walletDexTrades:Boolean(process.env.BITQUERY_API_KEY),coingecko:Boolean(process.env.COINGECKO_API_KEY),nansen:Boolean(process.env.NANSEN_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)},
       holderRows:holders.length,      labeledRows:labelRows.length,
       whaleDexBuyRows:confirmedWhaleBuys24.length,
       tradeError,
@@ -82,12 +82,16 @@ export async function scanToken({chain,address}){
     whale:{status:holders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,cexHintCount:0},
     evidence:{score:evidence,confirmedDexBuyActivity:confirmedDexBuys>0},
+    confidence:null,
     limitations:[
       "Top-holder discovery requires a holder/indexing provider.",
       "DEX pair buy/sell counts are market-level activity, not proof that a specific whale bought.",
-      "CEX labels require a maintained address-label dataset."
+      "CEX labels require a maintained address-label dataset.",
+      "Confidence is evidence strength unless historical backtest calibration is available."
     ]
   };
+  output.confidence=buildConfidence(output);
+  return output;
 }
 
 export async function discoverAndScanMarket(limit=20){
@@ -111,6 +115,7 @@ export async function discoverAndScanMarket(limit=20){
       results.push({...result,symbol:coin.symbol?.toUpperCase(),name:coin.name,coingeckoId:coin.id,priceChange24h:coin.price_change_percentage_24h});
     }catch(error){results.push({ok:false,symbol:coin.symbol?.toUpperCase(),name:coin.name,error:error.message||"SCAN_ERROR"});}
   }
-  results.sort((a,b)=>(b.evidence?.score||0)-(a.evidence?.score||0));
+  for(const result of results){if(result.ok)result.confidence=buildConfidence(result);}
+  results.sort((a,b)=>(b.confidence?.confidence||0)-(a.confidence?.confidence||0));
   return {ok:true,timestamp:new Date().toISOString(),count:results.length,results};
 }
