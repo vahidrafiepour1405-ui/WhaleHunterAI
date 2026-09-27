@@ -18,12 +18,13 @@ export function buildConfidence(scan){
     sourceStatus("bitquery",Boolean(providers.holderDiscovery),Boolean(dq.holderRows||0)>0,Number(dq.holderRows||0)>0?22:0),
     sourceStatus("address_labels",Boolean(providers.addressLabels),Number(dq.labeledRows||0)>0,Number(dq.labeledRows||0)>0?12:0),
     sourceStatus("wallet_dex_trades",Boolean(providers.walletDexTrades),Number(dq.whaleDexBuyRows||0)>0,Number(dq.whaleDexBuyRows||0)>0?25:0),
-    sourceStatus("coingecko",Boolean(providers.coingecko),Boolean(scan.coingeckoId||scan.marketDiscovery),scan.coingeckoId?8:0),
+    sourceStatus("coingecko",Boolean(providers.coingecko),Boolean(scan.marketDiscovery?.coingecko||scan.coingeckoId),scan.marketDiscovery?.coingecko?8:scan.coingeckoId?8:0),
+    sourceStatus("coinmarketcap",Boolean(providers.coinmarketcap),Boolean(scan.marketDiscovery?.cmc),scan.marketDiscovery?.cmc?10:0),
     sourceStatus("nansen",Boolean(providers.nansen),Boolean(dq.nansenRows||0)>0,Number(dq.nansenRows||0)>0?10:0),
     sourceStatus("arkham",Boolean(providers.arkham),Boolean(dq.arkhamRows||0)>0,Number(dq.arkhamRows||0)>0?5:0)
   ];
   const active=sources.filter(x=>x.available);
-  const independentSourceCount=active.filter(x=>["bitquery","address_labels","wallet_dex_trades","nansen","arkham"].includes(x.name)).length;
+  const independentSourceCount=active.filter(x=>["bitquery","address_labels","wallet_dex_trades","nansen","arkham","coinmarketcap","coingecko"].includes(x.name)).length;
   const contradictions=[];
   if(Number(best.sells24h||0)>Number(best.buys24h||0))contradictions.push("MARKET_SELL_PRESSURE");
   if(acc24.length===0&&confirmed.length===0)contradictions.push("NO_WHALE_ACCUMULATION_CONFIRMATION");
@@ -47,8 +48,8 @@ export function buildConfidence(scan){
   if(Number(scan.evidence?.nansenWhaleNetFlow24hUsd||0)>0)raw+=5;
   if(Number(scan.evidence?.nansenWhaleNetFlow7dUsd||0)>0)raw+=4;
   const coverage=active.length?active.reduce((s,x)=>s+x.evidence,0)/Math.max(1,sources.reduce((s,x)=>s+(x.configured?1:0),0)*1):0;
-  const agreementBonus=independentSourceCount>=3?8:independentSourceCount>=2?4:0;
-  const sourceCap=independentSourceCount>=4?100:independentSourceCount===3?85:independentSourceCount===2?70:independentSourceCount===1?55:30;
+  const agreementBonus=independentSourceCount>=5?10:independentSourceCount>=4?8:independentSourceCount>=3?5:independentSourceCount>=2?3:0;
+  const sourceCap=independentSourceCount>=5?100:independentSourceCount===4?90:independentSourceCount===3?80:independentSourceCount===2?65:independentSourceCount===1?50:25;
   const confidence=clamp(Math.min(sourceCap,Math.round(raw+agreementBonus)));
   const dataCompleteness=clamp(Math.round((active.length/Math.max(1,sources.length))*100));
   const calibrated=Boolean(scan.validation?.backtest?.sampleSize>=100);
