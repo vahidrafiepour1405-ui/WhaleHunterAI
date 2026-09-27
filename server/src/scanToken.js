@@ -2,6 +2,7 @@ import {getDexPairs,normalizeChain,providerStatus} from "./providers.js";
 import {getTopHolders,getHolderFlows,rankAccumulation} from "./holderProvider.js";
 import {classifyAddress} from "./addressClassifier.js";
 import {getAddressLabels,isNonIndependentLabel} from "./addressLabels.js";
+import {getWalletTokenBuys,aggregateWalletBuys} from "./dexTradeProvider.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -43,12 +44,16 @@ export async function scanToken({chain,address}){
   }
 
   const pairAddresses=pairData.map(x=>x.pairAddress).filter(Boolean);
-  let labelRows=[];\n  if(holders.length&&process.env.BITQUERY_API_KEY){try{labelRows=await getAddressLabels(holders.map(h=>h.Holder?.Address),normalized);}catch(error){holderError=holderError||error.message||"ADDRESS_LABEL_ERROR";}}\n  const labelMap=new Map();\n  for(const row of labelRows){const key=String(row.Address||"").toLowerCase();if(!labelMap.has(key))labelMap.set(key,[]);labelMap.get(key).push(row);}\n  const classified=holders.map(h=>{const holderAddress=h.Holder?.Address;const labels=labelMap.get(String(holderAddress||"").toLowerCase())||[];const labelExcluded=labels.some(isNonIndependentLabel);return {...h,address:holderAddress,labels:labels.map(x=>x.Label),classify:labelExcluded?{excluded:true,reason:"LABELED_NON_INDEPENDENT"}:classifyAddress(holderAddress,{tokenAddress:address,pairAddresses})};});
+  let labelRows=[];  if(holders.length&&process.env.BITQUERY_API_KEY){try{labelRows=await getAddressLabels(holders.map(h=>h.Holder?.Address),normalized);}catch(error){holderError=holderError||error.message||"ADDRESS_LABEL_ERROR";}}  const labelMap=new Map();  for(const row of labelRows){const key=String(row.Address||"").toLowerCase();if(!labelMap.has(key))labelMap.set(key,[]);labelMap.get(key).push(row);}  const classified=holders.map(h=>{const holderAddress=h.Holder?.Address;const labels=labelMap.get(String(holderAddress||"").toLowerCase())||[];const labelExcluded=labels.some(isNonIndependentLabel);return {...h,address:holderAddress,labels:labels.map(x=>x.Label),classify:labelExcluded?{excluded:true,reason:"LABELED_NON_INDEPENDENT"}:classifyAddress(holderAddress,{tokenAddress:address,pairAddresses})};});
   const activeHolders=classified.filter(x=>!x.classify.excluded);
   const accum24=rankAccumulation(activeHolders,flows24);
   const accum7=rankAccumulation(activeHolders,flows7);
   const realAccum24=accum24.filter(x=>x.netFlow>0);
   const realAccum7=accum7.filter(x=>x.netFlow>0);
+  let walletBuys24=[]; let tradeError=null;
+  if(holders.length&&process.env.BITQUERY_API_KEY){try{const rows=await getWalletTokenBuys({chain:normalized,address,holderAddresses:activeHolders.map(x=>x.address),hours:24});walletBuys24=aggregateWalletBuys(rows);}catch(error){tradeError=error.message||"DEX_TRADE_ERROR";}}
+  const buyMap=new Map(walletBuys24.map(x=>[String(x.address).toLowerCase(),x]));
+  const confirmedWhaleBuys24=realAccum24.map(x=>({...x,dexBuy:buyMap.get(String(x.address).toLowerCase())||null})).filter(x=>x.dexBuy&&x.dexBuy.buys>0);
   const evidence=Math.max(0,Math.min(100,
     (confirmedDexBuys>0?35:0)+
     (best?.liquidityUsd>=100000?20:best?.liquidityUsd>=25000?10:0)+
@@ -67,12 +72,14 @@ export async function scanToken({chain,address}){
       transferHistoryConfigured:false,
       holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       providers:providerStatus(),
-      holderRows:holders.length,\n      labeledRows:labelRows.length,
+      holderRows:holders.length,      labeledRows:labelRows.length,
+      whaleDexBuyRows:confirmedWhaleBuys24.length,
+      tradeError,
       holderError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
     market:{bestPair:best,pairs:pairData.slice(0,20)},
-    whale:{status:holders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
+    whale:{status:holders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,cexHintCount:0},
     evidence:{score:evidence,confirmedDexBuyActivity:confirmedDexBuys>0},
     limitations:[
