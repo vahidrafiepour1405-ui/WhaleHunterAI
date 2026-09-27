@@ -48,7 +48,7 @@ export async function getHolderFlows({chain,address,hours=24,limit=5000}){
       }
     }
   }`;
-  const data=await gql(query,{address,hours:Math.max(1,Math.min(Number(hours)||24,168)),limit:Math.min(Math.max(Number(limit)||5000,10000),10000)});
+  const data=await gql(query,{address,hours:Math.max(1,Math.min(Number(hours)||24,168)),limit:Math.min(Math.max(Number(limit)||5000,1),10000)});
   return data.EVM.Transfers||[];
 }
 
