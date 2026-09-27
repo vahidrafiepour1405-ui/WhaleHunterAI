@@ -191,16 +191,31 @@ export async function discoverAndScanMarket(limit=100){
   const cmc=cmcRes.status==="fulfilled"?cmcRes.value.map(normalizeCmcAsset):[];
   const gecko=geckoRes.status==="fulfilled"?geckoRes.value:[];
   const cgMap=new Map(gecko.map(x=>[String(x.id||"").toLowerCase(),x]));
+  const cgByContract=new Map();
+  for(const g of gecko){
+    for(const [platform,address] of Object.entries(g.platforms||{})){
+      if(address)cgByContract.set(String(platform).toLowerCase()+":"+String(address).toLowerCase(),g);
+    }
+  }
   const cmcById=new Map(cmc.filter(x=>x.cmcId).map(x=>[String(x.cmcId),x]));
+  const platformChain=name=>{
+    const n=String(name||"").toLowerCase();
+    if(n.includes("ethereum"))return"ethereum";
+    if(n.includes("arbitrum"))return"arbitrum";
+    if(n.includes("base"))return"base";
+    if(n.includes("polygon"))return"polygon";
+    return null;
+  };
   const major=["BTC","ETH","BNB","SOL","XRP","ADA","DOGE","AVAX","LINK","TRX","TON","DOT","MATIC","POL","LTC","BCH","ATOM","UNI","AAVE","NEAR"];
   const candidates=new Map();
   for(const a of cmc){
     if(!a.symbol)continue;
     const key="cmc:"+String(a.cmcId);
-    const cg=cgMap.get(String(a.cmcId).toLowerCase())||gecko.find(g=>String(g.symbol||"").toUpperCase()===a.symbol&&String(g.name||"").toLowerCase()===String(a.name||"").toLowerCase())||null;
+    const platformKey=platformChain(a.platformName);
+    const cg=cgByContract.get(String(platformKey||"").toLowerCase()+":"+String(a.platformTokenAddress||"").toLowerCase())||gecko.find(g=>String(g.symbol||"").toUpperCase()===a.symbol&&String(g.name||"").toLowerCase()===String(a.name||"").toLowerCase())||null;
     const priority=major.includes(a.symbol)?1000:(a.rank>0?Math.max(0,500-a.rank):0);
-    const address=cg?.platforms?.ethereum||cg?.platforms?.["arbitrum-one"]||cg?.platforms?.base||cg?.platforms?.["polygon-pos"]||a.platform?.token_address||null;
-    const chain=cg?.platforms?.ethereum?"ethereum":cg?.platforms?.base?"base":cg?.platforms?.["arbitrum-one"]?"arbitrum":cg?.platforms?.["polygon-pos"]?"polygon":null;
+    const address=cg?.platforms?.ethereum||cg?.platforms?.["arbitrum-one"]||cg?.platforms?.base||cg?.platforms?.["polygon-pos"]||a.platformTokenAddress||null;
+    const chain=cg?.platforms?.ethereum?"ethereum":cg?.platforms?.base?"base":cg?.platforms?.["arbitrum-one"]?"arbitrum":cg?.platforms?.["polygon-pos"]?"polygon":platformKey;
     if(address&&chain)candidates.set(key,{address,chain,cmcAsset:a,cgAsset:cg,priority});
   }
   for(const g of gecko){
