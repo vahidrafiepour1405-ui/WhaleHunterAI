@@ -38,6 +38,14 @@ export function buildConfidence(scan){
   raw+=Number(best.liquidityUsd||0)>=100000?10:Number(best.liquidityUsd||0)>=25000?5:0;
   raw+=Number(best.volume24hUsd||0)>=100000?5:Number(best.volume24hUsd||0)>=25000?3:0;
   raw-=contradictions.length*7;
+  const analysis=scan.analysis||{};
+  const manipulationRisk=Number(analysis.manipulationRisk?.heuristicScore||0);
+  if(manipulationRisk>=70)raw-=15;
+  else if(manipulationRisk>=40)raw-=7;
+  if(scan.evidence?.crossSourceWhaleFlowAgreement===true)raw+=8;
+  if(scan.evidence?.crossSourceWhaleFlowAgreement===false)raw-=8;
+  if(Number(scan.evidence?.nansenWhaleNetFlow24hUsd||0)>0)raw+=5;
+  if(Number(scan.evidence?.nansenWhaleNetFlow7dUsd||0)>0)raw+=4;
   const coverage=active.length?active.reduce((s,x)=>s+x.evidence,0)/Math.max(1,sources.reduce((s,x)=>s+(x.configured?1:0),0)*1):0;
   const agreementBonus=independentSourceCount>=3?8:independentSourceCount>=2?4:0;
   const sourceCap=independentSourceCount>=4?100:independentSourceCount===3?85:independentSourceCount===2?70:independentSourceCount===1?55:30;
