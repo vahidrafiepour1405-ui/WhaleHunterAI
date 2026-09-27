@@ -1,6 +1,7 @@
 import {getDexPairs,normalizeChain,providerStatus} from "./providers.js";
 import {getTopHolders,getHolderFlows,rankAccumulation} from "./holderProvider.js";
 import {classifyAddress} from "./addressClassifier.js";
+import {getAddressLabels,isNonIndependentLabel} from "./addressLabels.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -42,7 +43,7 @@ export async function scanToken({chain,address}){
   }
 
   const pairAddresses=pairData.map(x=>x.pairAddress).filter(Boolean);
-  const classified=holders.map(h=>{const holderAddress=h.Holder?.Address;return {...h,address:holderAddress,classify:classifyAddress(holderAddress,{tokenAddress:address,pairAddresses})};});
+  let labelRows=[];\n  if(holders.length&&process.env.BITQUERY_API_KEY){try{labelRows=await getAddressLabels(holders.map(h=>h.Holder?.Address),normalized);}catch(error){holderError=holderError||error.message||"ADDRESS_LABEL_ERROR";}}\n  const labelMap=new Map();\n  for(const row of labelRows){const key=String(row.Address||"").toLowerCase();if(!labelMap.has(key))labelMap.set(key,[]);labelMap.get(key).push(row);}\n  const classified=holders.map(h=>{const holderAddress=h.Holder?.Address;const labels=labelMap.get(String(holderAddress||"").toLowerCase())||[];const labelExcluded=labels.some(isNonIndependentLabel);return {...h,address:holderAddress,labels:labels.map(x=>x.Label),classify:labelExcluded?{excluded:true,reason:"LABELED_NON_INDEPENDENT"}:classifyAddress(holderAddress,{tokenAddress:address,pairAddresses})};});
   const activeHolders=classified.filter(x=>!x.classify.excluded);
   const accum24=rankAccumulation(activeHolders,flows24);
   const accum7=rankAccumulation(activeHolders,flows7);
@@ -66,7 +67,7 @@ export async function scanToken({chain,address}){
       transferHistoryConfigured:false,
       holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       providers:providerStatus(),
-      holderRows:holders.length,
+      holderRows:holders.length,\n      labeledRows:labelRows.length,
       holderError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
