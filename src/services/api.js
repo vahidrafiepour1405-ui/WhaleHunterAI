@@ -1,7 +1,10 @@
-const API_BASE="";
+const API_BASE=(process.env.EXPO_PUBLIC_API_BASE_URL||"").replace(/\/$/,"");
+export function isOnlineApiConfigured(){return Boolean(API_BASE);}
 export async function apiGet(path){
- if(!API_BASE)throw new Error("DATA_PROVIDER_NOT_CONFIGURED");
- const res=await fetch(API_BASE+path);
+ if(!API_BASE)throw new Error("ONLINE_API_NOT_CONFIGURED");
+ const res=await fetch(API_BASE+path,{headers:{Accept:"application/json"}});
  if(!res.ok)throw new Error("API_"+res.status);
  return res.json();
 }
+export async function onlineTokenScan(chain,address){return apiGet("/api/v1/token/"+encodeURIComponent(chain)+"/"+encodeURIComponent(address));}
+export async function onlineMarketScan(limit=20){return apiGet("/api/v1/scan-market?limit="+encodeURIComponent(limit));}
