@@ -1,4 +1,6 @@
 import {getDexPairs,normalizeChain,providerStatus} from "./providers.js";
+import {getTopHolders,getHolderFlows,rankAccumulation} from "./holderProvider.js";
+import {classifyAddress} from "./addressClassifier.js";
 
 const CEX_HINTS=["binance","coinbase","kraken","okx","bybit","kucoin","gate","bitget","crypto.com"];
 
@@ -30,7 +32,22 @@ export async function scanToken({chain,address}){
   const transfers=[];
   const cexHints=[];
   const confirmedDexBuys=pairData.filter(x=>x.confirmedDexSpotBuyActivity).length;
+  let holders=[]; let flows24=[]; let flows7=[]; let holderError=null;
+  if(process.env.BITQUERY_API_KEY){
+    try{
+      holders=await getTopHolders({chain:normalized,address,limit:100});
+      flows24=await getHolderFlows({chain:normalized,address,hours:24,limit:5000});
+      flows7=await getHolderFlows({chain:normalized,address,hours:168,limit:10000});
+    }catch(error){holderError=error.message||"HOLDER_SCAN_ERROR";}
+  }
 
+  const pairAddresses=pairData.map(x=>x.pairAddress).filter(Boolean);
+  const classified=holders.map(h=>{const address=h.Holder?.Address;return {...h,address,classify:classifyAddress(address,{tokenAddress:address,pairAddresses})};});
+  const activeHolders=classified.filter(x=>!x.classify.excluded);
+  const accum24=rankAccumulation(activeHolders,flows24);
+  const accum7=rankAccumulation(activeHolders,flows7);
+  const realAccum24=accum24.filter(x=>x.netFlow>0);
+  const realAccum7=accum7.filter(x=>x.netFlow>0);
   const evidence=Math.max(0,Math.min(100,
     (confirmedDexBuys>0?35:0)+
     (best?.liquidityUsd>=100000?20:best?.liquidityUsd>=25000?10:0)+
@@ -47,13 +64,15 @@ export async function scanToken({chain,address}){
     dataQuality:{
       dexPairsFound:pairData.length,
       transferHistoryConfigured:false,
-      holderDiscoveryConfigured:false,
+      holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY),
       providers:providerStatus(),
+      holderRows:holders.length,
+      holderError,
       note:"No wallet-level accumulation is inferred until a holder/indexing provider and address-label source are configured."
     },
     market:{bestPair:best,pairs:pairData.slice(0,20)},
-    whale:{status:"HOLDER_PROVIDER_REQUIRED",independentWhales:[],accumulating:[],excluded:[]},
-    flows:{transferCount:0,cexHintCount:0},
+    whale:{status:holders.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",independentWhales:activeHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.slice(0,100),accumulating7d:realAccum7.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
+    flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,cexHintCount:0},
     evidence:{score:evidence,confirmedDexBuyActivity:confirmedDexBuys>0},
     limitations:[
       "Top-holder discovery requires a holder/indexing provider.",
