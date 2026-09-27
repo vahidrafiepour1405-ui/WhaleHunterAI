@@ -16,6 +16,10 @@ services:
         value: "100000"
       - key: BITQUERY_API_KEY
         sync: false
+      - key: NANSEN_API_KEY
+        sync: false
+      - key: ARKHAM_API_KEY
+        sync: false
       - key: BITQUERY_GRAPHQL_URL
         value: "https://graphql.bitquery.io"
       - key: BITQUERY_LABELS_GRAPHQL_URL
