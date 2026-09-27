@@ -186,14 +186,14 @@ export async function discoverAndScanMarket(limit=100){
   ]);
   const cmc=cmcRes.status==="fulfilled"?cmcRes.value.map(normalizeCmcAsset):[];
   const gecko=geckoRes.status==="fulfilled"?geckoRes.value:[];
-  const cgMap=new Map(gecko.map(x=>[String(x.symbol||"").toUpperCase()+":"+String(x.name||"").toLowerCase(),x]));
-  const cmcBySymbol=new Map(cmc.filter(x=>x.symbol).map(x=>[x.symbol,x]));
+  const cgMap=new Map(gecko.map(x=>[String(x.id||"").toLowerCase(),x]));
+  const cmcById=new Map(cmc.filter(x=>x.cmcId).map(x=>[String(x.cmcId),x]));
   const major=["BTC","ETH","BNB","SOL","XRP","ADA","DOGE","AVAX","LINK","TRX","TON","DOT","MATIC","POL","LTC","BCH","ATOM","UNI","AAVE","NEAR"];
   const candidates=new Map();
   for(const a of cmc){
     if(!a.symbol)continue;
-    const key=a.symbol+":"+String(a.name||"").toLowerCase();
-    const cg=cgMap.get(key)||gecko.find(g=>String(g.symbol||"").toUpperCase()===a.symbol)||null;
+    const key="cmc:"+String(a.cmcId);
+    const cg=cgMap.get(String(a.cmcId).toLowerCase())||gecko.find(g=>String(g.symbol||"").toUpperCase()===a.symbol&&String(g.name||"").toLowerCase()===String(a.name||"").toLowerCase())||null;
     const priority=major.includes(a.symbol)?1000:(a.rank>0?Math.max(0,500-a.rank):0);
     const address=cg?.platforms?.ethereum||cg?.platforms?.["arbitrum-one"]||cg?.platforms?.base||cg?.platforms?.["polygon-pos"]||a.platform?.token_address||null;
     const chain=cg?.platforms?.ethereum?"ethereum":cg?.platforms?.base?"base":cg?.platforms?.["arbitrum-one"]?"arbitrum":cg?.platforms?.["polygon-pos"]?"polygon":null;
@@ -202,7 +202,7 @@ export async function discoverAndScanMarket(limit=100){
   for(const g of gecko){
     const sym=String(g.symbol||"").toUpperCase();
     if(!sym)continue;
-    const cmcAsset=cmcBySymbol.get(sym)||null;
+    const cmcAsset=cmc.find(x=>x.symbol===sym&&String(x.name||"").toLowerCase()===String(g.name||"").toLowerCase())||null;
     const address=g.platforms?.ethereum||g.platforms?.["arbitrum-one"]||g.platforms?.base||g.platforms?.["polygon-pos"]||null;
     const chain=g.platforms?.ethereum?"ethereum":g.platforms?.base?"base":g.platforms?.["arbitrum-one"]?"arbitrum":g.platforms?.["polygon-pos"]?"polygon":null;
     if(address&&chain){
