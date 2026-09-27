@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { health } from "./health.js";
-import { scanToken } from "./scanToken.js";
+import { scanToken, discoverAndScanMarket } from "./scanToken.js";
 
 const app=express();
 app.use(cors({origin:process.env.CORS_ORIGIN||"*"}));
@@ -20,7 +20,7 @@ app.get("/api/v1/token/:chain/:address",async(req,res)=>{
   }
 });
 
-app.get("/api/v1/scan",async(req,res)=>{
+app.get("/api/v1/scan-market",async(req,res)=>{\n  try{res.json(await discoverAndScanMarket(Math.min(Number(req.query.limit||20),20)));}\n  catch(error){res.status(502).json({ok:false,error:error.message||"UPSTREAM_ERROR"});}\n});\n\napp.get("/api/v1/scan",async(req,res)=>{
   const address=String(req.query.address||"");
   const chain=String(req.query.chain||"ethereum");
   if(!address)return res.status(400).json({ok:false,error:"ADDRESS_REQUIRED"});
