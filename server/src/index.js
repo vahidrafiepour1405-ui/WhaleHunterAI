@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { health } from "./health.js";
 import { scanToken, discoverAndScanMarket } from "./scanToken.js";
+import { buildMasterSignal } from "./masterSignal.js";
 
 const app=express();
 app.use(cors({origin:process.env.CORS_ORIGIN||"*"}));
@@ -14,6 +15,7 @@ app.get("/api/v1/status",(_,res)=>res.json(health()));
 app.get("/api/v1/token/:chain/:address",async(req,res)=>{
   try{
     const result=await scanToken({chain:req.params.chain,address:req.params.address});
+    result.masterSignal=buildMasterSignal(result);
     res.json(result);
   }catch(error){
     res.status(502).json({ok:false,error:error.message||"UPSTREAM_ERROR"});
@@ -30,7 +32,9 @@ app.get("/api/v1/scan",async(req,res)=>{
   const chain=String(req.query.chain||"ethereum");
   if(!address)return res.status(400).json({ok:false,error:"ADDRESS_REQUIRED"});
   try{
-    res.json(await scanToken({chain,address}));
+    const result=await scanToken({chain,address});
+    result.masterSignal=buildMasterSignal(result);
+    res.json(result);
   }catch(error){
     res.status(502).json({ok:false,error:error.message||"UPSTREAM_ERROR"});
   }
