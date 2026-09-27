@@ -234,7 +234,22 @@ export async function discoverAndScanMarket(limit=100){
   const top500=allCandidates.slice(0,surveillanceTop);
   const prioritySet=top500.slice(0,deepMax);
   const rotatedSet=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
-  const list=[...new Map([...prioritySet,...rotatedSet].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()];
+  const scoredTop500=top500.map(x=>{
+    const a=x.cmcAsset||{};
+    const g=x.cgAsset||{};
+    const volume=Number(a.volume24hUsd||g.total_volume||0);
+    const change=Math.abs(Number(a.change24h??g.price_change_percentage_24h??0));
+    const marketRank=Number(a.rank||g.market_cap_rank||500);
+    const usdtHint=(String(a.symbol||"")?1:0);
+    return {...x,scanPriority:
+      (marketRank<=50?35:marketRank<=100?25:marketRank<=250?18:10)+
+      Math.min(25,Math.log10(Math.max(1,volume))*2)+
+      Math.min(15,change)+
+      (usdtHint?3:0)};
+  }).sort((a,b)=>b.scanPriority-a.scanPriority);
+  const prioritySet2=scoredTop500.slice(0,deepMax);
+  const rotatedSet2=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
+  const list=[...new Map([...prioritySet2,...rotatedSet2].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()];
   const results=[];
   for(const candidate of list){
     try{
