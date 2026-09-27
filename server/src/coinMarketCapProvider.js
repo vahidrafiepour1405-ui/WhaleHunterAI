@@ -10,9 +10,9 @@ async function get(path,params={}){
   if(body.status?.error_code)throw new Error("CMC_"+body.status.error_code+"_"+(body.status.error_message||""));
   return body.data||[];
 }
-export async function getListings(limit=250){
+export async function getListings(limit=500){
   const path=process.env.CMC_API_KEY?"/v3/cryptocurrency/listings/latest":"/public-api/v3/cryptocurrency/listings/latest";
-  return get(path,{start:1,limit:Math.min(250,Math.max(1,limit)),convert:"USD",sort:"market_cap"});
+  return get(path,{start:1,limit:Math.min(5000,Math.max(1,limit)),convert:"USD",sort:"market_cap"});
 }
 export async function getQuotesByIds(ids){
   if(!ids.length)return[];
