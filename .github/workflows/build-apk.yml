@@ -18,7 +18,7 @@ jobs:
      run: echo "$ANDROID_HOME" && ls "$ANDROID_HOME/platforms" | tail -1
    - uses: gradle/actions/setup-gradle@v4
      with:
-      gradle-version: '8.10.2'
+      gradle-version: '8.13'
    - name: Build signed release APK
      run: gradle -p android_work assembleRelease
    - uses: actions/upload-artifact@v4
