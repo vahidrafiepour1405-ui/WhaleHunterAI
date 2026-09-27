@@ -49,7 +49,7 @@ export function buildConfidence(scan){
   if(Number(scan.evidence?.nansenWhaleNetFlow24hUsd||0)>0)raw+=5;
   if(Number(scan.evidence?.nansenWhaleNetFlow7dUsd||0)>0)raw+=4;
   const coverage=active.length?active.reduce((s,x)=>s+x.evidence,0)/Math.max(1,sources.reduce((s,x)=>s+(x.configured?1:0),0)*1):0;
-  const agreementBonus=(independentSourceCount>=5?10:independentSourceCount>=4?8:independentSourceCount>=3?5:independentSourceCount>=2?3:0)+(marketSourceCount>=2?3:marketSourceCount>=1?1:0);
+  const agreementBonus=(independentSourceCount>=5?10:independentSourceCount>=4?8:independentSourceCount>=3?5:independentSourceCount>=2?3:0)+(marketSourceCount>=2?3:marketSourceCount>=1?1:0)+(Number(market.usdtPairCount||0)>0?2:0)+(Number(market.cmc?.spotUsdtPairs||0)>0?2:0);
   const sourceCap=independentSourceCount>=5?100:independentSourceCount===4?90:independentSourceCount===3?80:independentSourceCount===2?65:independentSourceCount===1?50:25;
   const confidence=clamp(Math.min(sourceCap,Math.round(raw+agreementBonus)));
   const dataCompleteness=clamp(Math.round((active.length/Math.max(1,sources.length))*100));
