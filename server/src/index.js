@@ -23,7 +23,7 @@ app.get("/api/v1/token/:chain/:address",async(req,res)=>{
 });
 
 app.get("/api/v1/scan-market",async(req,res)=>{
-  try{res.json(await discoverAndScanMarket(Math.min(Number(req.query.limit||20),20)));}
+  try{const data=await discoverAndScanMarket(Math.min(Number(req.query.limit||20),20));data.results=data.results.map(x=>({...x,masterSignal:buildMasterSignal(x)}));res.json(data);}
   catch(error){res.status(502).json({ok:false,error:error.message||"UPSTREAM_ERROR"});}
 });
 
