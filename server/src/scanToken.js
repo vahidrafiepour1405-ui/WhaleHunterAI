@@ -215,7 +215,7 @@ export async function discoverAndScanMarket(limit=100){
     }
   }
   const majorMarketWatch=major.map(symbol=>{
-    const ca=cmcBySymbol.get(symbol)||null;
+    const ca=cmc.find(x=>x.symbol===symbol)||null;
     const ga=gecko.find(x=>String(x.symbol||"").toUpperCase()===symbol)||null;
     if(!ca&&!ga)return null;
     return{
