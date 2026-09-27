@@ -1,0 +1,5 @@
+const MAX=10000;
+export function normalizeSignalPoint(x={}){return{timestamp:Number(x.timestamp||Date.now()),symbol:String(x.symbol||""),chain:String(x.chain||""),signal:String(x.signal||"WATCH"),score:Number(x.score||0),price:Number(x.price||0),whales:Number(x.whales||0),multiWhale:!!x.multiWhale,falseRisk:String(x.falseRisk||"UNKNOWN")}}
+export function appendSignal(history=[],point){return[...history,normalizeSignalPoint(point)].sort((a,b)=>a.timestamp-b.timestamp).slice(-MAX)}
+export function hourlySeries(history=[],symbol,hours=24){const start=Date.now()-hours*3600000,b=new Map();for(const raw of history){const p=normalizeSignalPoint(raw);if(p.symbol!==symbol||p.timestamp<start)continue;const k=Math.floor(p.timestamp/3600000)*3600000;b.set(k,p)}return[...b.values()].sort((a,z)=>a.timestamp-z.timestamp)}
+export function timeframeSnapshot(history=[],symbol,hours){const p=hourlySeries(history,symbol,hours);return{symbol,hours,points:p,change:p.length?p.at(-1).score-p[0].score:0,peakScore:p.length?Math.max(...p.map(x=>x.score)):0}}
