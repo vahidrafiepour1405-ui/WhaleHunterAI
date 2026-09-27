@@ -99,7 +99,7 @@ export async function scanToken({chain,address,cmcId=null}){
     (best?.buys24h>best?.sells24h?20:0)+
     (best?.volume24hUsd>=100000?15:best?.volume24hUsd>=25000?8:0))-
     (cexHints.length>0?10:0)
-  ));
+  );
 
   const output={
     ok:true,
