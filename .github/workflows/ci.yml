@@ -44,7 +44,7 @@ jobs:
           node - <<'NODE'
           const fs=require('fs');
           const html=fs.readFileSync('android_work/app/src/main/assets/index.html','utf8');
-          const scripts=[...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(x=>x[1]);
+          const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]);
           if(!scripts.length) throw new Error('No inline script found');
           scripts.forEach((code,i)=>{try{new Function(code)}catch(e){throw new Error('index.html script '+(i+1)+': '+e.message)}});
           console.log('Inline script syntax OK:',scripts.length);
