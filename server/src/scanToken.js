@@ -283,7 +283,7 @@ export async function discoverAndScanMarket(limit=100){
   }).sort((a,b)=>b.scanPriority-a.scanPriority);
   const prioritySet2=scoredTop500.slice(0,deepMax);
   const rotatedSet2=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
-  const list=[...new Map([...prioritySet2,...rotatedSet2,...outsideDiscovery].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()];
+  const list=[...new Map([...prioritySet2,...rotatedSet2,...outsideDiscovery].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()].slice(0,deepMax);
   const results=[];
   for(const candidate of list){
     try{
