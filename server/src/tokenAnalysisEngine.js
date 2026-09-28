@@ -61,6 +61,24 @@ export function analyzeTokenStructure(scan){
     (confirmed.length>0&&nansenBuyers.length>0?0:10)
   ));
 
+  const independentCount=holders.length;
+  const confirmedCount=confirmed.length;
+  const nansenPositive=Number(nansen.flow1d?.whaleNetFlowUsd||0)>0 || Number(nansen.flow7d?.whaleNetFlowUsd||0)>0;
+  const sourceAgreement=scan.evidence?.crossSourceWhaleFlowAgreement===true;
+  const positive24=flow24>0;
+  const positive7=flow7>0;
+  const qualityScore=clamp(Math.round(
+    (independentCount>=10?20:independentCount>=5?12:independentCount>0?6:0)+
+    (confirmedCount>=3?30:confirmedCount>=2?24:confirmedCount>=1?15:0)+
+    (positive24?15:0)+
+    (positive7?10:0)+
+    (nansenPositive?10:0)+
+    (sourceAgreement?15:0)-
+    (internalRatio>35?15:internalRatio>20?7:0)-
+    (redFlags.includes("MARKET_SELL_DOMINANCE")?10:0)-
+    (redFlags.includes("EXTREME_VOLUME_TO_LIQUIDITY")?8:0)
+  ));
+
   return{
     holderStructure:{
       top1Usd:top1,
@@ -91,6 +109,7 @@ export function analyzeTokenStructure(scan){
       nansenWhaleNetFlow7dUsd:Number(nansen.flow7d?.whaleNetFlowUsd||0),
       flowAgreement:scan.evidence?.crossSourceWhaleFlowAgreement??null
     },
+    whaleSignalQuality:{score:qualityScore,label:qualityScore>=70?"HIGH":qualityScore>=50?"MEDIUM":qualityScore>=30?"LOW":"INSUFFICIENT",components:{independentWhales:independentCount,confirmedWalletBuys:confirmedCount,positive24h:positive24,positive7d:positive7,nansenPositive,sourceAgreement},note:"Heuristic evidence-quality score; not a price prediction or pump probability."},
     manipulationRisk:{
       heuristicScore:washHeuristic,
       label:washHeuristic>=70?"HIGH":washHeuristic>=40?"MODERATE":"LOW",
