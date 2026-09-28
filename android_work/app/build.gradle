@@ -6,12 +6,26 @@ android {
   applicationId 'com.whalehunter.ai.final'
   minSdk 23
   targetSdk 36
-  versionCode 22
-  versionName '22.0'
+  versionCode 23
+  versionName '23.0'
+ }
+ signingConfigs {
+  release {
+   def ks = System.getenv("SIGNING_KEYSTORE_PATH")
+   def sp = System.getenv("SIGNING_STORE_PASSWORD")
+   def kp = System.getenv("SIGNING_KEY_PASSWORD")
+   def ka = System.getenv("SIGNING_KEY_ALIAS")
+   if (ks && sp && kp && ka) {
+    storeFile file(ks)
+    storePassword sp
+    keyPassword kp
+    keyAlias ka
+   }
+  }
  }
  buildTypes {
   release {
-   signingConfig signingConfigs.debug
+   signingConfig signingConfigs.release
    minifyEnabled false
   }
  }
