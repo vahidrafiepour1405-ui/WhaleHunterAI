@@ -23,12 +23,12 @@ jobs:
      run: gradle -p android_work assembleRelease
    - uses: actions/upload-artifact@v4
      with:
-      name: WhaleHunterAI-release-apk-v17
+      name: WhaleHunterAI-release-apk-v18
       path: android_work/app/build/outputs/apk/release/app-release.apk
    - name: Publish GitHub Release
      env:
       GH_TOKEN: ${{ github.token }}
      run: |
-      gh release view v17.0.0 >/dev/null 2>&1 || gh release create v17.0.0 --title "Whale Hunter AI PRO 17.0.0" --notes "Online WhaleHunterAI build: whale evidence, multi-agent scan, technical/volume/liquidity analysis, false-signal checks and Top-500 priority surveillance."
-      gh release upload v17.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
-      gh release edit v17.0.0 --title "Whale Hunter AI PRO 17.0.0" --latest
+      gh release view v18.0.0 >/dev/null 2>&1 || gh release create v18.0.0 --title "Whale Hunter AI PRO 18.0.0" --notes "Online WhaleHunterAI build: whale evidence, multi-agent scan, technical/volume/liquidity analysis, false-signal checks and Top-500 priority surveillance."
+      gh release upload v18.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
+      gh release edit v18.0.0 --title "Whale Hunter AI PRO 18.0.0" --latest
