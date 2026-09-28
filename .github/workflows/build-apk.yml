@@ -17,6 +17,21 @@ jobs:
    - uses: gradle/actions/setup-gradle@v4
      with:
       gradle-version: '8.13'
+   - name: Prepare stable signing key
+     env:
+      SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+      SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+      SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+     run: |
+      set -e
+      echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/whalehunterai-release.keystore"
+      test -s "$RUNNER_TEMP/whalehunterai-release.keystore"
+      keytool -list -keystore "$RUNNER_TEMP/whalehunterai-release.keystore" -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" >/dev/null
+      echo "SIGNING_KEYSTORE_PATH=$RUNNER_TEMP/whalehunterai-release.keystore" >> "$GITHUB_ENV"
+      echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD" >> "$GITHUB_ENV"
+      echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
+      echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
    - name: Build release APK
      run: |
       set -o pipefail
@@ -37,12 +52,12 @@ jobs:
       git push origin build-debug --force
    - uses: actions/upload-artifact@v4
      with:
-      name: WhaleHunterAI-release-apk-v22
+      name: WhaleHunterAI-release-apk-v23
       path: android_work/app/build/outputs/apk/release/app-release.apk
    - name: Publish GitHub Release
      env:
       GH_TOKEN: ${{ github.token }}
      run: |
-      gh release view v22.0.0 >/dev/null 2>&1 || gh release create v22.0.0 --title "Whale Hunter AI PRO 21.0.0" --notes "Live online build with automatic network reconnect, multi-source market data, whale evidence and Top-500 priority surveillance."
-      gh release upload v22.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
-      gh release edit v22.0.0 --title "Whale Hunter AI PRO 21.0.0" --latest
+      gh release view v23.0.0 >/dev/null 2>&1 || gh release create v23.0.0 --title "Whale Hunter AI PRO 23.0.0" --notes "Live online build with automatic network reconnect, multi-source market data, whale evidence and Top-500 priority surveillance."
+      gh release upload v23.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
+      gh release edit v23.0.0 --title "Whale Hunter AI PRO 23.0.0" --latest
