@@ -1,6 +1,6 @@
 const endpoint=process.env.CMC_API_BASE_URL||"https://pro-api.coinmarketcap.com";
 const PLATFORM={ethereum:"ethereum",polygon:"polygon",arbitrum:"arbitrum",base:"base",bsc:"binance-smart-chain"};
-async function getCandles({chain,pairAddress,interval="1h",limit=72}){
+export async function getCandles({chain,pairAddress,interval="1h",limit=72}){
   const platform=PLATFORM[chain];
   if(!platform||!pairAddress)throw new Error("CMC_KLINE_INPUT_UNSUPPORTED");
   const to=Math.floor(Date.now()/1000);
