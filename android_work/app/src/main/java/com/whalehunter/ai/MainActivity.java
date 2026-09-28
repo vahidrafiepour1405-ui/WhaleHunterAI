@@ -55,7 +55,7 @@ public class MainActivity extends Activity {
   try{
    String html=readAsset("index.html");
    String patch=readAsset("ui_patch.js");
-   html=html.replace("</body>","<script>"+patch+"<\/script></body>");
+   html=html.replace("</body>","<script>"+patch+"</script></body>");
    w.loadDataWithBaseURL("https://appassets.androidplatform.net/assets/",""+html,"text/html","UTF-8",null);
   }catch(Exception e){
    w.loadDataWithBaseURL("https://appassets.androidplatform.net/assets/","<h2 style='color:white'>Whale Hunter AI</h2><p style='color:#aaa'>خطا در بارگذاری برنامه.</p>","text/html","UTF-8",null);
