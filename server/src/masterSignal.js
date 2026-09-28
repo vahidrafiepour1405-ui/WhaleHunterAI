@@ -7,6 +7,8 @@ export function buildMasterSignal(scan){
   const confirmedBuys=Array.isArray(whale.confirmedDexBuys24h)?whale.confirmedDexBuys24h:[];
   const independent=Array.isArray(whale.independentWhales)?whale.independentWhales:[];
   const evidence=Number(scan.evidence?.score||0);
+  const quality=scan.analysis?.whaleSignalQuality||{};
+  const qualityScore=Number(quality.score||0);
   const confidence=Number(scan.confidence?.confidence||0);
   const dexConfirmed=Boolean(scan.evidence?.confirmedDexBuyActivity);
   const liquidity=Number(best.liquidityUsd||0);
@@ -18,6 +20,7 @@ export function buildMasterSignal(scan){
   if(sells>buys)risks.push("SELL_PRESSURE");
   if(!dexConfirmed)risks.push("NO_MARKET_BUY_CONFIRMATION");
   if(acc24.length===0)risks.push("NO_24H_WHALE_NET_INFLOW");
+  if(qualityScore<50)risks.push("LOW_WHALE_SIGNAL_QUALITY");
   if(confirmedBuys.length===0)risks.push("NO_WHALE_DEX_BUY_CONFIRMATION");
   if(scan.confidence?.contradictions?.length)risks.push("CROSS_SOURCE_CONTRADICTION");
   if(String(scan.technical?.state||"") === "BEARISH_CONFIRMATION")risks.push("TECHNICAL_STRUCTURE_NEGATIVE");
@@ -32,9 +35,11 @@ export function buildMasterSignal(scan){
   if(Number(scan.market?.usdtPairCount||0)>0)confirmations.push("USDT_PAIR_LIQUIDITY_PATH");
   if(Number(scan.market?.cmc?.spotUsdtPairs||0)>0)confirmations.push("CMC_SPOT_USDT_CONFIRMATION");
   if(String(scan.technical?.state||"") === "BULLISH_CONFIRMATION")confirmations.push("TECHNICAL_STRUCTURE_SUPPORT");
+  if(qualityScore>=70)confirmations.push("HIGH_WHALE_SIGNAL_QUALITY");
+  else if(qualityScore>=50)confirmations.push("ACCEPTABLE_WHALE_SIGNAL_QUALITY");
   let state="INSUFFICIENT_EVIDENCE";
-  if(confidence>=80&&confirmedBuys.length>=2&&confirmations.length>=4&&risks.length<=1)state="STRONG_EVIDENCE";
-  else if(confidence>=60&&confirmedBuys.length>=1&&confirmations.length>=2&&risks.length<=2)state="WATCH";
+  if(confidence>=80&&qualityScore>=70&&confirmedBuys.length>=2&&confirmations.length>=5&&risks.length<=1)state="STRONG_EVIDENCE";
+  else if(confidence>=60&&qualityScore>=50&&confirmedBuys.length>=1&&confirmations.length>=3&&risks.length<=2)state="WATCH";
   else if(confidence>=40)state="MIXED_EVIDENCE";
   return {
     state,
@@ -44,6 +49,7 @@ export function buildMasterSignal(scan){
     dataCompleteness:Number(scan.confidence?.dataCompleteness||0),
     independentSources:Number(scan.confidence?.independentSourceCount||0),
     confirmedWhaleBuys24h:confirmedBuys.length,
+    whaleSignalQuality:qualityScore,
     confirmations,
     risks,
     calibration:scan.confidence?.calibration||null,
