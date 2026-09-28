@@ -29,6 +29,6 @@ jobs:
      env:
       GH_TOKEN: ${{ github.token }}
      run: |
-      gh release view v17.0.0 >/dev/null 2>&1 || gh release create v16.0.0 --title "Whale Hunter AI PRO 17.0.0" --notes "Whale evidence, multi-agent scan, technical/volume/liquidity analysis and false-signal checks."
-      gh release upload v16.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
-      gh release edit v16.0.0 --title "Whale Hunter AI PRO 16.0.0" --latest
+      gh release view v17.0.0 >/dev/null 2>&1 || gh release create v17.0.0 --title "Whale Hunter AI PRO 17.0.0" --notes "Online WhaleHunterAI build: whale evidence, multi-agent scan, technical/volume/liquidity analysis, false-signal checks and Top-500 priority surveillance."
+      gh release upload v17.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
+      gh release edit v17.0.0 --title "Whale Hunter AI PRO 17.0.0" --latest
