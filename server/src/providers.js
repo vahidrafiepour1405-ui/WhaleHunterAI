@@ -22,6 +22,6 @@ export function providerStatus(){
     nansen:Boolean(process.env.NANSEN_API_KEY),
     walletDexTrades:Boolean(process.env.BITQUERY_API_KEY),
     coingecko:true,
-    coinmarketcap:true
+    coinmarketcap:true,cmcDexHolders:true
   };
 }
