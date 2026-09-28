@@ -8,7 +8,7 @@
 </style>
 <style>html,body{background:radial-gradient(circle at 10% 0,#173d59 0,#061321 35%,#02050c 78%)!important}.card{background:linear-gradient(145deg,#0b2035ee,#030a14f5);border-color:#28516d}.hero{background:radial-gradient(circle at 90% 0,#3a2b1455,#0a1728 48%)!important}.brand{color:#f5fbff;text-shadow:0 0 18px #00d9ff55}.btn{background:linear-gradient(90deg,#00a6c7,#7652e8,#c38a24)!important}.tab.active{background:linear-gradient(135deg,#123b4d,#2b2048);border-color:#22d3ee}.metric,.asset,.agent,.whaleRow,.signalRow{background:linear-gradient(145deg,#081a2c,#050d18);border-color:#244761}.chartBox{background:#020a12;border-color:#2a526d}.analysisBox{margin-top:9px;padding:10px;border:1px solid #2b536c;border-radius:12px;background:#00d9ff0b}.liqDot{filter:drop-shadow(0 0 6px #f6c85f)}</style></head>
 <body>
-<div class="updateBox"><button class="updateBtn" id="appUpdateBtn">🔄 بررسی آخرین نسخه</button><div class="updateHint" id="updateHint">نسخه فعلی 17.0</div></div>
+<div class="updateBox"><button class="updateBtn" id="appUpdateBtn">🔄 بررسی آخرین نسخه</button><div class="updateHint" id="updateHint">نسخه فعلی 19.0</div></div>
 <main class="app">
 <header class="top"><div><div class="brand">◈ WHALE HUNTER <span style="color:#f6c85f">AI</span></div><div class="sub">MULTI-AGENT • MARKET • WHALE PORTFOLIO • ANALYTICS</div></div><div><div class="live">● LIVE DATA</div><div style="margin-top:5px;font-size:8px;color:#c9a7ff;text-align:center;font-weight:900">PRO EDITION</div></div></header>
 <nav class="tabs">
@@ -89,11 +89,15 @@ function mapOnlineScan(r,base){
 
 
 async function loadMainMarket(){
- const out=[];let cmc=[],cg=[];
- try{const j=await json("https://pro-api.coinmarketcap.com/public-api/v3/cryptocurrency/listings/latest?start=1&limit=500&convert=USD");cmc=j?.data||[]}catch(e){}
- for(const x of cmc){const q=x.quote?.USD||{};out.push({source:"CMC",chain:x.platform?.slug||"multi",address:x.platform?.token_address||"",symbol:x.symbol,name:x.name,price:num(q.price),volume:num(q.volume_24h),liquidity:0,buys:0,sells:0,p24:num(q.percent_change_24h),marketCap:num(q.market_cap),rank:num(x.cmc_rank),quote:"USD",cmcId:x.id,slug:x.slug})}
- try{cg=await json("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=200&page=1&sparkline=false")}catch(e){}
- for(const x of (cg||[])){out.push({source:"CG",chain:"multi",address:"",symbol:String(x.symbol||"").toUpperCase(),name:x.name,price:num(x.current_price),volume:num(x.total_volume),liquidity:0,buys:0,sells:0,p24:num(x.price_change_percentage_24h),marketCap:num(x.market_cap),rank:num(x.market_cap_rank),quote:"USD",geckoId:x.id})}
+ const out=[];
+ try{
+  const live=await onlineJson("/api/v1/market-live?limit=500");
+  for(const x of (live.cmc||[]))out.push({source:"ONLINE • CMC",chain:x.platformName||"multi",address:x.platformTokenAddress||"",symbol:x.symbol,name:x.name,price:num(x.priceUsd),volume:num(x.volume24hUsd),liquidity:0,buys:0,sells:0,p24:num(x.change24h),marketCap:num(x.marketCapUsd),rank:num(x.rank),quote:"USD",cmcId:x.cmcId,slug:x.symbol});
+  for(const x of (live.coingecko||[]))out.push({source:"ONLINE • CG",chain:"multi",address:"",symbol:String(x.symbol||"").toUpperCase(),name:x.name,price:num(x.current_price),volume:num(x.total_volume),liquidity:0,buys:0,sells:0,p24:num(x.price_change_percentage_24h),marketCap:num(x.market_cap),rank:num(x.market_cap_rank),quote:"USD",geckoId:x.id});
+  if(out.length)return out;
+ }catch(e){}
+ try{const j=await json("https://pro-api.coinmarketcap.com/public-api/v3/cryptocurrency/listings/latest?start=1&limit=500&convert=USD");for(const x of (j?.data||[])){const q=x.quote?.USD||{};out.push({source:"CMC",chain:x.platform?.slug||"multi",address:x.platform?.token_address||"",symbol:x.symbol,name:x.name,price:num(q.price),volume:num(q.volume_24h),liquidity:0,buys:0,sells:0,p24:num(q.percent_change_24h),marketCap:num(q.market_cap),rank:num(x.cmc_rank),quote:"USD",cmcId:x.id,slug:x.slug})}}catch(e){}
+ try{const cg=await json("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=200&page=1&sparkline=false");for(const x of (cg||[]))out.push({source:"CG",chain:"multi",address:"",symbol:String(x.symbol||"").toUpperCase(),name:x.name,price:num(x.current_price),volume:num(x.total_volume),liquidity:0,buys:0,sells:0,p24:num(x.price_change_percentage_24h),marketCap:num(x.market_cap),rank:num(x.market_cap_rank),quote:"USD",geckoId:x.id})}catch(e){}
  return out;
 }
 async function discoverDex(){
@@ -110,6 +114,19 @@ async function loadMarket(){
   for(const x of [...main,...dex]){const k=(x.symbol||"").toUpperCase()+"|"+(x.chain||"multi");if(!map.has(k))map.set(k,x);else{const old=map.get(k);map.set(k,{...old,...x,source:old.source+" + "+x.source,price:x.price||old.price,volume:Math.max(x.volume||0,old.volume||0),liquidity:Math.max(x.liquidity||0,old.liquidity||0),usdt:x.usdt||old.usdt,usdc:x.usdc||old.usdc,pair:x.pair||old.pair,address:x.address||old.address})}}
   MARKET=[...map.values()];renderMarket();document.getElementById("marketStatus").textContent="بازار به‌روزرسانی شد • "+MARKET.length+" دارایی";
  }catch(e){document.getElementById("marketStatus").textContent="خطا: "+e.message}finally{b.disabled=false}
+}
+async function refreshLiveMarket(){
+ try{
+  const live=await onlineJson("/api/v1/market-live?limit=500");
+  const cmc=live.cmc||[],cg=live.coingecko||[];
+  const merged=[];
+  for(const x of cmc)merged.push({source:"ONLINE • CMC",chain:x.platformName||"multi",address:x.platformTokenAddress||"",symbol:x.symbol,name:x.name,price:num(x.priceUsd),volume:num(x.volume24hUsd),liquidity:0,buys:0,sells:0,p24:num(x.change24h),marketCap:num(x.marketCapUsd),rank:num(x.rank),quote:"USD",cmcId:x.cmcId});
+  for(const x of cg)merged.push({source:"ONLINE • CG",chain:"multi",address:"",symbol:String(x.symbol||"").toUpperCase(),name:x.name,price:num(x.current_price),volume:num(x.total_volume),liquidity:0,buys:0,sells:0,p24:num(x.price_change_percentage_24h),marketCap:num(x.market_cap),rank:num(x.market_cap_rank),quote:"USD",geckoId:x.id});
+  if(merged.length){MARKET=merged;renderMarket();const t=new Date(live.timestamp||Date.now());document.getElementById("marketStatus").textContent="🟢 LIVE • آخرین دریافت "+t.toLocaleTimeString("fa-IR")+" • "+MARKET.length+" دارایی";}
+ }catch(e){document.getElementById("marketStatus").textContent="🟡 اتصال زنده موقتاً در دسترس نیست؛ داده قبلی حفظ شد."}
+}
+async function refreshLiveStatus(){
+ try{const x=await onlineJson("/api/v1/live-status");const live=document.querySelector(".live");if(live)live.textContent="● LIVE • "+new Date(x.generatedAt||Date.now()).toLocaleTimeString("fa-IR");}catch(e){}
 }
 let MARKET=[];let SCAN_RESULTS=[];let SIGNAL_TF="1H";
 function filtered(){const q=document.getElementById("q").value.trim().toLowerCase(),c=document.getElementById("chain").value,quote=document.getElementById("quote").value,s=document.getElementById("sort").value;let a=MARKET.filter(t=>(c==="all"||t.chain===c||t.chain==="multi")&&(!q||String(t.symbol).toLowerCase().includes(q)||String(t.name).toLowerCase().includes(q)||String(t.address).toLowerCase().includes(q))&&(quote==="all"||(quote==="USDT"&&t.usdt)||(quote==="USDC"&&t.usdc)));a.sort((x,y)=>s==="volume"?num(y.volume)-num(x.volume):s==="change"?num(y.p24)-num(x.p24):s==="liquidity"?num(y.liquidity)-num(x.liquidity):num(x.rank||999999)-num(y.rank||999999));return a}
@@ -200,6 +217,9 @@ async function runAgentNow(i){
 async function direct(){const q=document.getElementById("coinName").value.trim(),st=document.getElementById("directStatus");if(!q){st.textContent="نام یا نماد را وارد کن";return}st.textContent="در حال تطبیق بازار…";try{if(!MARKET.length)await loadMarket();let t=MARKET.find(x=>String(x.symbol).toLowerCase()===q.toLowerCase()||String(x.name).toLowerCase()===q.toLowerCase());if(!t){const j=await json("https://api.dexscreener.com/latest/dex/search?q="+encodeURIComponent(q));const ps=Array.isArray(j?.pairs)?j.pairs:[],p=ps.sort((a,b)=>num(b.liquidity?.usd)-num(a.liquidity?.usd))[0];if(p)t={chain:String(p.chainId||"").toLowerCase(),address:p.baseToken?.address||"",symbol:p.baseToken?.symbol||q,name:p.baseToken?.name||q,price:num(p.priceUsd),liquidity:num(p.liquidity?.usd),volume:num(p.volume?.h24),buys:num(p.txns?.h24?.buys),sells:num(p.txns?.h24?.sells),p24:num(p.priceChange?.h24),dex:p.dexId||"unknown",pair:p.pairAddress||""}}if(!t)throw new Error("ارز پیدا نشد");t=await analyzeToken(t);document.getElementById("results").innerHTML=renderResult(t);showAsset(t);st.textContent="تحلیل کامل شد";}catch(e){st.textContent="خطا: "+e.message}}
 function openSites(){const q=document.getElementById("siteCoin").value.trim();if(!q){document.getElementById("siteStatus").textContent="نماد یا Contract را وارد کن";return}const s=encodeURIComponent(q);document.getElementById("siteStatus").innerHTML='ابزارها آماده‌اند: <a style="color:#67e8f9" target="_self" href="https://dexscreener.com/search?q='+s+'">DEX Screener</a> • <a style="color:#67e8f9" target="_self" href="https://coinmarketcap.com/search/?q='+s+'">CMC</a> • <a style="color:#67e8f9" target="_self" href="https://www.coingecko.com/en/search?query='+s+'">CoinGecko</a>'}
 async function checkUpdate(){const h=document.getElementById("updateHint");h.textContent="در حال باز کردن آخرین نسخه…";location.href="https://github.com/vahidrafiepour1405-ui/WhaleHunterAI/releases/latest"}
-document.querySelectorAll("[data-sig]").forEach(b=>b.onclick=()=>{SIGNAL_TF=b.dataset.sig;document.querySelectorAll("[data-sig]").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderSignals()});async function directSignal(){const q=document.getElementById("signalCoinName").value.trim(),st=document.getElementById("signalDirectStatus");if(!q){st.textContent="نام یا نماد را وارد کن";return}st.textContent="در حال تحلیل چندمنبعی و ساخت سیگنال…";try{document.getElementById("coinName").value=q;await direct();st.textContent="تحلیل + سیگنال آماده شد؛ جزئیات در پنجره تحلیل نمایش داده شد."}catch(e){st.textContent="خطا: "+e.message}}document.getElementById("signalAnalyze").onclick=directSignal;document.getElementById("loadMarket").onclick=loadMarket;document.getElementById("runScan").onclick=scan;document.getElementById("analyze").onclick=direct;document.getElementById("walletLoad").onclick=walletBalances;document.getElementById("siteOpen").onclick=openSites;document.getElementById("appUpdateBtn").onclick=checkUpdate;["q","chain","quote","sort"].forEach(id=>document.getElementById(id).addEventListener("input",renderMarket));
+document.querySelectorAll("[data-sig]").forEach(b=>b.onclick=()=>{SIGNAL_TF=b.dataset.sig;document.querySelectorAll("[data-sig]").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderSignals()});async function directSignal(){const q=document.getElementById("signalCoinName").value.trim(),st=document.getElementById("signalDirectStatus");if(!q){st.textContent="نام یا نماد را وارد کن";return}st.textContent="در حال تحلیل چندمنبعی و ساخت سیگنال…";try{document.getElementById("coinName").value=q;await direct();st.textContent="تحلیل + سیگنال آماده شد؛ جزئیات در پنجره تحلیل نمایش داده شد."}catch(e){st.textContent="خطا: "+e.message}}document.getElementById("signalAnalyze").onclick=directSignal;
+setTimeout(()=>{refreshLiveStatus();refreshLiveMarket()},1500);
+setInterval(refreshLiveStatus,20000);
+setInterval(refreshLiveMarket,30000);document.getElementById("loadMarket").onclick=loadMarket;document.getElementById("runScan").onclick=scan;document.getElementById("analyze").onclick=direct;document.getElementById("walletLoad").onclick=walletBalances;document.getElementById("siteOpen").onclick=openSites;document.getElementById("appUpdateBtn").onclick=checkUpdate;["q","chain","quote","sort"].forEach(id=>document.getElementById(id).addEventListener("input",renderMarket));
 </script>
 </body></html>
