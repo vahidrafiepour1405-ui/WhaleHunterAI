@@ -114,7 +114,7 @@ export async function scanToken({chain,address,cmcId=null}){
     dataQuality:{
       dexPairsFound:pairData.length,
       transferHistoryConfigured:Boolean(process.env.BITQUERY_API_KEY),
-      holderDiscoveryConfigured:Boolean(process.env.BITQUERY_API_KEY||process.env.CMC_API_BASE_URL||true),
+      holderDiscoveryConfigured:true,
       providers:{...providerStatus(),coingecko:Boolean(process.env.COINGECKO_API_KEY),arkham:Boolean(process.env.ARKHAM_API_KEY)},
       holderRows:holders.length,
       cmcHolderRows:cmcHolderRows.length,
