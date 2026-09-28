@@ -21,6 +21,7 @@ jobs:
           cache-dependency-path: server/package.json
       - run: npm install --omit=dev
       - run: node --check src/index.js
+      - run: node --check src/liveSources.js
       - run: node --check src/scanToken.js
       - run: node --check src/holderProvider.js
       - run: node --check src/cmcHolderProvider.js
