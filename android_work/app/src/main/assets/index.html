@@ -126,35 +126,31 @@ function historicalScore(symbol,hours){const start=Date.now()-hours*3600000;cons
 function signalSide(t){const m=t.master||{};return m.signal==="BUY"?"BUY":m.signal==="SELL"?"SELL":t.buys>t.sells?"BUY BIAS":t.sells>t.buys?"SELL BIAS":"WATCH"}
 async function scan(){
  const box=document.getElementById("results"),st=document.getElementById("scanStatus"),b=document.getElementById("runScan");
- b.disabled=true;box.innerHTML="<div class=\"empty\">در حال اجرای اسکن آنلاین روی هسته WhaleHunterAI…</div>";
+ b.disabled=true;box.innerHTML='<div class="empty">در حال اجرای اسکن آنلاین روی هسته WhaleHunterAI…</div>';
  try{
   const data=await onlineJson("/api/v1/scan-market?limit=20");
   const rs=(data.results||[]).map(x=>mapOnlineScan(x,{}));
-  SCAN_RESULTS=rs.slice();recordSignalHistory(rs);box.innerHTML=rs.length?rs.map(renderResult).join(""):"<div class=\"empty\">داده کافی برای اسکن آنلاین پیدا نشد.</div>";renderSignals();
-  document.getElementById("sAnalyzed").textContent=rs.length;document.getElementById("sEvidence").textContent=rs.filter(x=>x.onlineState==="STRONG_EVIDENCE").length;document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);document.getElementById("sWatch").textContent=rs.filter(x=>x.onlineState==="WATCH"||x.onlineState==="STRONG_EVIDENCE").length;st.textContent="اسکن آنلاین کامل شد • "+rs.length+" دارایی • Top-500 اولویت‌دار";
- }catch(e){st.textContent="اتصال آنلاین: "+e.message+" • نسخه محلی در دسترس است";if(!MARKET.length)await loadMarket();const list=filtered(),rs=[];for(let i=0;i<list.length;i+=8){const batch=list.slice(i,i+8);const br=await Promise.all(batch.map(x=>analyzeToken(x).catch(err=>({...x,score:0,count:0,top1:0,top5:0,volume:num(x.volume),liquidity:num(x.liquidity),buys:num(x.buys),sells:num(x.sells),scanError:String(err.message||err)}))));rs.push(...br);SCAN_RESULTS=rs.slice();recordSignalHistory(br);box.innerHTML=rs.map(renderResult).join("");renderSignals();if(rs.length>=20)break}document.getElementById("sAnalyzed").textContent=rs.length;document.getElementById("sEvidence").textContent=rs.filter(x=>x.buys>x.sells).length;document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);document.getElementById("sWatch").textContent=rs.filter(x=>x.score>=50).length;
+  SCAN_RESULTS=rs.slice();recordSignalHistory(rs);box.innerHTML=rs.length?rs.map(renderResult).join(""):'<div class="empty">داده کافی برای اسکن آنلاین پیدا نشد.</div>';renderSignals();
+  document.getElementById("sAnalyzed").textContent=rs.length;
+  document.getElementById("sEvidence").textContent=rs.filter(x=>x.onlineState==="STRONG_EVIDENCE").length;
+  document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);
+  document.getElementById("sWatch").textContent=rs.filter(x=>x.onlineState==="WATCH"||x.onlineState==="STRONG_EVIDENCE").length;
+  st.textContent="اسکن آنلاین کامل شد • "+rs.length+" دارایی • Top-500 اولویت‌دار";
+ }catch(e){
+  st.textContent="اتصال آنلاین: "+e.message+" • نسخه محلی در دسترس است";
+  if(!MARKET.length)await loadMarket();
+  const list=filtered(),rs=[];
+  for(let i=0;i<list.length&&rs.length<20;i+=8){
+   const batch=list.slice(i,i+8);
+   const br=await Promise.all(batch.map(x=>analyzeToken(x).catch(err=>({...x,score:0,count:0,top1:0,top5:0,volume:num(x.volume),liquidity:num(x.liquidity),buys:num(x.buys),sells:num(x.sells),scanError:String(err.message||err)}))));
+   rs.push(...br);SCAN_RESULTS=rs.slice();recordSignalHistory(br);box.innerHTML=rs.map(renderResult).join("");renderSignals();
+  }
+  document.getElementById("sAnalyzed").textContent=rs.length;
+  document.getElementById("sEvidence").textContent=rs.filter(x=>x.buys>x.sells).length;
+  document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);
+  document.getElementById("sWatch").textContent=rs.filter(x=>x.score>=50).length;
  }finally{b.disabled=false}
- return;
- /* legacy local scanner retained below for offline fallback */
- if(!MARKET.length)await loadMarket();
- const list=filtered();
- const box=document.getElementById("results"),st=document.getElementById("scanStatus"),b=document.getElementById("runScan");
- b.disabled=true;box.innerHTML='<div class="empty">در حال اسکن کل فهرست بازار…</div>';
- const rs=[];
- for(let i=0;i<list.length;i+=8){
-  const batch=list.slice(i,i+8);
-  st.textContent="Multi-Agent "+Math.min(i+batch.length,list.length)+"/"+list.length;
-  const br=await Promise.all(batch.map(x=>analyzeToken(x).catch(e=>({...x,score:0,count:0,top1:0,top5:0,volume:num(x.volume),liquidity:num(x.liquidity),buys:num(x.buys),sells:num(x.sells),scanError:String(e.message||e)}))));
-  rs.push(...br);SCAN_RESULTS=rs.slice();recordSignalHistory(br);box.innerHTML=rs.map(renderResult).join("");renderSignals();
- }
- document.getElementById("sAnalyzed").textContent=rs.length;
- document.getElementById("sEvidence").textContent=rs.filter(x=>x.buys>x.sells).length;
- document.getElementById("sWhales").textContent=rs.reduce((a,x)=>a+x.count,0);
- document.getElementById("sWatch").textContent=rs.filter(x=>x.score>=50).length;
- SCAN_RESULTS=rs.slice();renderSignals();st.textContent="اسکن کامل شد • "+rs.length+" دارایی";
- b.disabled=false;
 }
-
 async function signalScore(t,tf){const hours=tf==="1H"?1:tf==="4H"?4:tf==="12H"?12:24;const h=historicalScore(t.symbol,hours);const base=num(t.score);if(!h)return Math.round(base);return Math.round(Math.max(0,Math.min(100,base+h.change*.5)))}async function renderSignals(){const box=document.getElementById("signalList"),chart=document.getElementById("signalChart");if(!box||!chart)return;if(!SCAN_RESULTS.length){box.innerHTML='<div class="empty">ابتدا اسکن کلی را اجرا کن.</div>';return}const arr=[];for(const t of SCAN_RESULTS){const s=await signalScore(t,SIGNAL_TF),hours=SIGNAL_TF==="1H"?1:SIGNAL_TF==="4H"?4:SIGNAL_TF==="12H"?12:24,h=historicalScore(t.symbol,hours);arr.push({...t,signal:s,side:signalSide(t),hist:h})}arr.sort((a,b)=>b.signal-a.signal);const top=arr.slice(0,10);box.innerHTML=top.map((t,i)=>'<div class="signalRow" onclick="showAsset('+JSON.stringify(t).replace(/</g,"\\u003c")+')"><div class="signalTop"><b>#'+(i+1)+' '+esc(t.symbol)+'</b><span class="signalPct">'+t.signal+'%</span></div><div class="small">'+esc(t.side)+' • '+esc(t.chain||"multi")+' • 24h '+num(t.p24).toFixed(2)+'% • حجم '+money(t.volume)+'</div><div class="small">History '+(t.hist?t.hist.change.toFixed(0):"—")+' pts • Peak '+(t.hist?t.hist.peak.toFixed(0):"—")+' • False '+esc(t.agents?.falseSignal?.risk||"—")+'</div><div class="miniBar"><i style="width:'+t.signal+'%"></i></div></div>').join("");chart.innerHTML='<div class="chartLegend">'+esc(SIGNAL_TF)+' • امتیاز فعلی + تغییر ثبت‌شده از اسکن‌های قبلی • '+SIGNAL_HISTORY.length+' نقاط تاریخی</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;align-items:end;height:150px;padding:8px">'+top.map(t=>'<div title="'+esc(t.symbol)+' '+t.signal+'%" style="display:flex;flex-direction:column;justify-content:end;height:130px"><div style="height:'+Math.max(8,t.signal*1.1)+'px;background:linear-gradient(180deg,#22d3ee,#7c3aed);border-radius:6px 6px 2px 2px"></div><small style="font-size:7px;text-align:center;color:#aebbd1">'+esc(t.symbol)+'</small></div>').join("")+'</div>'}
 async function walletBalances(){
  const address=document.getElementById("walletAddress").value.trim(),chain=document.getElementById("walletChain").value,st=document.getElementById("walletStatus"),list=document.getElementById("walletList");if(!/^0x[a-fA-F0-9]{40}$/.test(address)){st.textContent="آدرس EVM معتبر وارد کن";return}
