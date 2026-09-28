@@ -75,6 +75,7 @@ export async function scanToken({chain,address,cmcId=null}){
   const accum7=rankAccumulation(whaleAnalysisHolders,flows7);
   const realAccum24=accum24.filter(x=>x.netFlow>0);
   const realAccum7=accum7.filter(x=>x.netFlow>0);
+  const cmcAccumulating=cmcQualifiedWhales.filter(x=>Number(x.netBuyAmount||0)>0).sort((a,b)=>Number(b.buyUsd||0)-Number(a.buyUsd||0));
   const activeSet=new Set(activeHolders.map(x=>String(x.address||"").toLowerCase()).filter(Boolean));
   const internalHolderTransfers24h=flows24.reduce((n,row)=>{const t=row.Transfer||{};return n+(activeSet.has(String(t.Sender||"").toLowerCase())&&activeSet.has(String(t.Receiver||"").toLowerCase())?1:0);},0);
   let nansenHolders=[]; let nansenBuyers=[]; let nansenFlow1d=null; let nansenFlow7d=null; let nansenError=null;
