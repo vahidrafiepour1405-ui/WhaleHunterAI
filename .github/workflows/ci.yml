@@ -23,8 +23,29 @@ jobs:
       - run: node --check src/index.js
       - run: node --check src/scanToken.js
       - run: node --check src/holderProvider.js
+      - run: node --check src/cmcHolderProvider.js
       - run: node --check src/addressClassifier.js
       - run: node --check src/masterSignal.js
       - run: node --check src/confidenceEngine.js
       - run: node --check src/technicalProvider.js
       - run: node --check src/tokenAnalysisEngine.js
+
+  android-ui-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check UI patch syntax
+        run: node --check android_work/app/src/main/assets/ui_patch.js
+      - name: Check inline Android UI scripts
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('android_work/app/src/main/assets/index.html','utf8');
+          const scripts=[...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(x=>x[1]);
+          if(!scripts.length) throw new Error('No inline script found');
+          scripts.forEach((code,i)=>{try{new Function(code)}catch(e){throw new Error('index.html script '+(i+1)+': '+e.message)}});
+          console.log('Inline script syntax OK:',scripts.length);
+          NODE
