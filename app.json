@@ -1,1 +1,1 @@
-{"expo":{"name":"Whale Hunter AI","slug":"whale-hunter-ai","version":"1.0.0","orientation":"portrait","userInterfaceStyle":"dark","android":{"package":"com.vahidrafiepour.whalehunterai","versionCode":1},"extra":{"architecture":"modular-agent-registry","apiMode":"provider-abstraction"}}}
+{"expo":{"name":"Whale Hunter AI","slug":"whale-hunter-ai","version":"17.0","orientation":"portrait","userInterfaceStyle":"dark","android":{"package":"com.vahidrafiepour.whalehunterai","versionCode":17},"extra":{"architecture":"modular-agent-registry","apiMode":"provider-abstraction"}}}
