@@ -22,7 +22,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:lin
 document.head.appendChild(style);
 const brand=document.querySelector('.brand');if(brand)brand.innerHTML='◉ WHALE HUNTER <span style="color:#f6c85f">AI</span>';
 const sub=document.querySelector('.sub');if(sub)sub.textContent='SMART MONEY • WHALE FLOW • LIQUIDITY MAP • MULTI-AGENT';
-const update=document.getElementById('updateHint');if(update)update.textContent='نسخه 15.0 • Whale Hunter AI';
+const update=document.getElementById('updateHint');if(update)update.textContent='نسخه 17.0 • Whale Hunter AI';
 function aiAnalysis(t){
  const buy=Number(t.buys||0),sell=Number(t.sells||0),score=Number(t.score||0),p=Number(t.p24||0);
  let title='نیاز به تأیید',tone='warn';
