@@ -20,7 +20,23 @@ jobs:
      with:
       gradle-version: '8.13'
    - name: Build release APK
-     run: gradle -p android_work assembleRelease
+     run: |
+      set -o pipefail
+      gradle -p android_work assembleRelease --stacktrace 2>&1 | tee /tmp/gradle-build.log
+   - name: Save build diagnostics
+     if: failure()
+     env:
+      GH_TOKEN: ${{ github.token }}
+     run: |
+      git config user.name "github-actions[bot]"
+      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      git fetch origin main
+      git checkout -B build-debug origin/main
+      mkdir -p build-debug
+      cp /tmp/gradle-build.log build-debug/gradle-build.log
+      git add build-debug/gradle-build.log
+      git commit -m "debug: capture Android build log" || true
+      git push origin build-debug --force
    - uses: actions/upload-artifact@v4
      with:
       name: WhaleHunterAI-release-apk-v21
