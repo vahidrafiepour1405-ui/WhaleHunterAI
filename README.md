@@ -36,3 +36,4 @@ The repository includes a GitHub Actions workflow at .github/workflows/eas-build
 
 ## Live data
 Alchemy Transfers API supports historical ERC-20 transfers across Ethereum and supported L2s. The provider uses pagination so large transfer histories are not silently truncated. Live whale-holder discovery still requires a holder/indexing provider; transfer-only data is never presented as proof of a fresh buy.
+\n\nWhale Hunter AI v22 trading analysis build.\n
