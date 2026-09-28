@@ -215,6 +215,7 @@ export async function discoverAndScanMarket(limit=100){
     if(n.includes("arbitrum"))return"arbitrum";
     if(n.includes("base"))return"base";
     if(n.includes("polygon"))return"polygon";
+    if(n.includes("solana"))return"solana";
     return null;
   };
   const major=["BTC","ETH","BNB","SOL","XRP","ADA","DOGE","AVAX","LINK","TRX","TON","DOT","MATIC","POL","LTC","BCH","ATOM","UNI","AAVE","NEAR"];
@@ -225,16 +226,16 @@ export async function discoverAndScanMarket(limit=100){
     const platformKey=platformChain(a.platformName);
     const cg=cgByContract.get(String(platformKey||"").toLowerCase()+":"+String(a.platformTokenAddress||"").toLowerCase())||gecko.find(g=>String(g.symbol||"").toUpperCase()===a.symbol&&String(g.name||"").toLowerCase()===String(a.name||"").toLowerCase())||null;
     const priority=major.includes(a.symbol)?1000:(a.rank>0?Math.max(0,500-a.rank):0);
-    const address=cg?.platforms?.ethereum||cg?.platforms?.["arbitrum-one"]||cg?.platforms?.base||cg?.platforms?.["polygon-pos"]||a.platformTokenAddress||null;
-    const chain=cg?.platforms?.ethereum?"ethereum":cg?.platforms?.base?"base":cg?.platforms?.["arbitrum-one"]?"arbitrum":cg?.platforms?.["polygon-pos"]?"polygon":platformKey;
+    const address=cg?.platforms?.ethereum||cg?.platforms?.["arbitrum-one"]||cg?.platforms?.base||cg?.platforms?.["polygon-pos"]||cg?.platforms?.solana||a.platformTokenAddress||null;
+    const chain=cg?.platforms?.ethereum?"ethereum":cg?.platforms?.base?"base":cg?.platforms?.["arbitrum-one"]?"arbitrum":cg?.platforms?.["polygon-pos"]?"polygon":cg?.platforms?.solana?"solana":platformKey;
     if(address&&chain)candidates.set(key,{address,chain,cmcAsset:a,cgAsset:cg,priority});
   }
   for(const g of gecko){
     const sym=String(g.symbol||"").toUpperCase();
     if(!sym)continue;
     const cmcAsset=cmc.find(x=>x.symbol===sym&&String(x.name||"").toLowerCase()===String(g.name||"").toLowerCase())||null;
-    const address=g.platforms?.ethereum||g.platforms?.["arbitrum-one"]||g.platforms?.base||g.platforms?.["polygon-pos"]||null;
-    const chain=g.platforms?.ethereum?"ethereum":g.platforms?.base?"base":g.platforms?.["arbitrum-one"]?"arbitrum":g.platforms?.["polygon-pos"]?"polygon":null;
+    const address=g.platforms?.ethereum||g.platforms?.["arbitrum-one"]||g.platforms?.base||g.platforms?.["polygon-pos"]||g.platforms?.solana||null;
+    const chain=g.platforms?.ethereum?"ethereum":g.platforms?.base?"base":g.platforms?.["arbitrum-one"]?"arbitrum":g.platforms?.["polygon-pos"]?"polygon":g.platforms?.solana?"solana":null;
     if(address&&chain){
       const key=sym+":"+String(g.name||"").toLowerCase();
       const priority=major.includes(sym)?1000:(Number(g.market_cap_rank)>0?Math.max(0,500-Number(g.market_cap_rank)):0);
@@ -283,7 +284,10 @@ export async function discoverAndScanMarket(limit=100){
   }).sort((a,b)=>b.scanPriority-a.scanPriority);
   const prioritySet2=scoredTop500.slice(0,deepMax);
   const rotatedSet2=top500.slice(rotationOffset*rotationBatch,(rotationOffset+1)*rotationBatch);
-  const list=[...new Map([...prioritySet2,...rotatedSet2,...outsideDiscovery].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()].slice(0,deepMax);
+  const top500Slots=Math.max(1,Math.min(deepMax,Math.ceil(deepMax*0.8)));
+  const outsideSlots=Math.max(0,deepMax-top500Slots);
+  const top500Mix=[...new Map([...prioritySet2.slice(0,top500Slots),...rotatedSet2.slice(0,top500Slots)].map(x=>[x.cmcAsset?.cmcId||x.cgAsset?.id||x.address,x])).values()].slice(0,top500Slots);
+  const list=[...top500Mix,...outsideDiscovery.slice(0,outsideSlots)];
   const results=[];
   for(const candidate of list){
     try{
@@ -329,7 +333,7 @@ export async function discoverAndScanMarket(limit=100){
       coverageModel:"TOP500_PRIORITY_PLUS_ROTATING_DEEP_SCAN_PLUS_OUTSIDE_TOP500_ROTATING_DISCOVERY",
       discoveryBatchSize:outsideDiscovery.length,
       discoveryBatchIndex:discoveryOffset,
-      rotation:{batchSize:rotationBatch,batchIndex:rotationOffset,deepScannedCount:list.length}
+      rotation:{batchSize:rotationBatch,batchIndex:rotationOffset,deepScannedCount:list.length,top500DeepScannedCount:top500Mix.length,outsideTop500DeepScannedCount:Math.min(outsideSlots,outsideDiscovery.length)}
     },
     results
   };
