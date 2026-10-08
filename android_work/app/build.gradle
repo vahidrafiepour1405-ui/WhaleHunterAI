@@ -6,8 +6,8 @@ android {
   applicationId 'com.whalehunter.ai.final'
   minSdk 23
   targetSdk 36
-  versionCode 23
-  versionName '23.0'
+  versionCode 24
+  versionName '24.0'
  }
  signingConfigs {
   release {
@@ -23,10 +23,5 @@ android {
    }
   }
  }
- buildTypes {
-  release {
-   signingConfig signingConfigs.release
-   minifyEnabled false
-  }
- }
+ buildTypes { release { signingConfig signingConfigs.release; minifyEnabled false } }
 }
