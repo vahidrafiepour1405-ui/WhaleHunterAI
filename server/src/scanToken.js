@@ -98,6 +98,12 @@ export async function scanToken({chain,address,cmcId=null}){
   if(holders.length&&process.env.BITQUERY_API_KEY){try{const rows=await getWalletTokenBuys({chain:normalized,address,holderAddresses:activeHolders.map(x=>x.address),hours:24});walletBuys24=aggregateWalletBuys(rows);}catch(error){tradeError=error.message||"DEX_TRADE_ERROR";}}
   const buyMap=new Map(walletBuys24.map(x=>[String(x.address).toLowerCase(),x]));
   const confirmedWhaleBuys24=realAccum24.map(x=>({...x,dexBuy:buyMap.get(String(x.address).toLowerCase())||null})).filter(x=>x.dexBuy&&x.dexBuy.buys>0);
+  const whalePositionEvents=confirmedWhaleBuys24.flatMap(x=>{
+    const d=x.dexBuy||{};
+    const hashes=Array.isArray(d.txHashes)?d.txHashes:[];
+    const time=d.lastBuy||null;
+    return [{wallet:x.address,time,side:"BUY",amountUsd:Number(d.buyVolumeUsd||0),tradeCount:Number(d.buys||0),txHash:hashes[0]||null,source:"BITQUERY_DEX_TRADES"}];
+  }).filter(x=>x.time).sort((a,b)=>new Date(b.time)-new Date(a.time)).slice(0,100);
   const evidence=Math.max(0,Math.min(100,
     (confirmedDexBuys>0?35:0)+
     (best?.liquidityUsd>=100000?20:best?.liquidityUsd>=25000?10:0)+
@@ -145,7 +151,7 @@ export async function scanToken({chain,address,cmcId=null}){
     },
     nansen:{holders:nansenHolders.slice(0,100),buyers24h:nansenBuyers.slice(0,100),flow1d:nansenFlow1d,flow7d:nansenFlow7d},
     cmcHolders:{rows:cmcQualifiedWhales.slice(0,100),accumulating:cmcAccumulating.slice(0,100)},
-    whale:{status:holders.length||nansenHolders.length||cmcHolderRows.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",minWhaleUsd,qualifiedWhaleCount:Math.max(whaleAnalysisHolders.length,cmcQualifiedWhales.length),independentWhales:whaleAnalysisHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.length?realAccum24.slice(0,100):cmcAccumulating.map(x=>({address:x.address,balance:x.balance,balanceUsd:x.balanceUsd,netFlow:x.netBuyAmount,buyUsd:x.buyUsd,sellUsd:x.sellUsd,source:"CMC_Dex_Holders"})).slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
+    whale:{status:holders.length||nansenHolders.length||cmcHolderRows.length?"LIVE_HOLDERS":"HOLDER_PROVIDER_REQUIRED",minWhaleUsd,qualifiedWhaleCount:Math.max(whaleAnalysisHolders.length,cmcQualifiedWhales.length),independentWhales:whaleAnalysisHolders.slice(0,100).map(x=>({address:x.address,balance:x.Balance?.Amount||null,balanceUsd:x.Balance?.AmountInUSD||null})),accumulating24h:realAccum24.length?realAccum24.slice(0,100):cmcAccumulating.map(x=>({address:x.address,balance:x.balance,balanceUsd:x.balanceUsd,netFlow:x.netBuyAmount,buyUsd:x.buyUsd,sellUsd:x.sellUsd,source:"CMC_Dex_Holders"})).slice(0,100),accumulating7d:realAccum7.slice(0,100),confirmedDexBuys24h:confirmedWhaleBuys24.slice(0,100),positionEvents24h:whalePositionEvents,excluded:classified.filter(x=>x.classify.excluded).map(x=>({address:x.address,reason:x.classify.reason}))},
     flows:{transferCount24h:flows24.length,transferCount7d:flows7.length,internalHolderTransfers24h,cexHintCount:0},
     evidence:{
       score:evidence,
