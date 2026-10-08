@@ -25,6 +25,7 @@ jobs:
       SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
      run: |
       set -e
+      test -n "$SIGNING_KEYSTORE_BASE64"
       echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/whalehunterai-release.keystore"
       test -s "$RUNNER_TEMP/whalehunterai-release.keystore"
       keytool -list -keystore "$RUNNER_TEMP/whalehunterai-release.keystore" -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" >/dev/null
@@ -33,31 +34,15 @@ jobs:
       echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD" >> "$GITHUB_ENV"
       echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS" >> "$GITHUB_ENV"
    - name: Build release APK
-     run: |
-      set -o pipefail
-      gradle -p android_work assembleRelease --stacktrace 2>&1 | tee /tmp/gradle-build.log
-   - name: Save build diagnostics
-     if: failure()
-     env:
-      GH_TOKEN: ${{ github.token }}
-     run: |
-      git config user.name "github-actions[bot]"
-      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      git fetch origin main
-      git checkout -B build-debug origin/main
-      mkdir -p build-debug
-      cp /tmp/gradle-build.log build-debug/gradle-build.log
-      git add build-debug/gradle-build.log
-      git commit -m "debug: capture Android build log" || true
-      git push origin build-debug --force
+     run: gradle -p android_work assembleRelease --stacktrace
    - uses: actions/upload-artifact@v4
      with:
-      name: WhaleHunterAI-release-apk-v23
+      name: WhaleHunterAI-release-apk-v24
       path: android_work/app/build/outputs/apk/release/app-release.apk
    - name: Publish GitHub Release
      env:
       GH_TOKEN: ${{ github.token }}
      run: |
-      gh release view v23.0.0 >/dev/null 2>&1 || gh release create v23.0.0 --title "Whale Hunter AI PRO 23.0.0" --notes "Live online build with automatic network reconnect, multi-source market data, whale evidence and Top-500 priority surveillance."
-      gh release upload v23.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
-      gh release edit v23.0.0 --title "Whale Hunter AI PRO 23.0.0" --latest
+      gh release view v24.0.0 >/dev/null 2>&1 || gh release create v24.0.0 --title "Whale Hunter AI 24.0.0" --notes "Online multi-source whale and market analysis Android build."
+      gh release upload v24.0.0 android_work/app/build/outputs/apk/release/app-release.apk --clobber
+      gh release edit v24.0.0 --title "Whale Hunter AI 24.0.0" --latest
